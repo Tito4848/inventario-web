@@ -1,32 +1,102 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
-import Dashboard from "./pages/Dashboard"
-import Productos from "./pages/Productos"
-import Categorias from "./pages/Categoria"
-import Subcategorias from "./pages/Subcategorias"
-import Unidad_medida from "./pages/Unidad_medida"
-import Equivalencia from "./pages/Equivalencia"
-import Stock from "./pages/Stock"
-import Movimientos from "./pages/Movimientos"
-import Navbar from "./components/Navbar"
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from './lib/queryClient'
+import { ThemeProvider } from './lib/theme'
+import { AuthProvider } from './lib/AuthProvider'
+import { NotificationProvider } from './lib/notifications'
+import RequireAuth, { RequireGuest } from './lib/RequireAuth'
+import AppLayout from './layouts/AppLayout'
+import PageSkeleton from './components/ui/PageSkeleton'
+
+const Landing = lazy(() => import('./pages/Landing'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Analytics = lazy(() => import('./pages/Analytics'))
+const Productos = lazy(() => import('./pages/Productos'))
+const Categorias = lazy(() => import('./pages/Categoria'))
+const Subcategorias = lazy(() => import('./pages/Subcategorias'))
+const Unidad_medida = lazy(() => import('./pages/Unidad_medida'))
+const Equivalencia = lazy(() => import('./pages/Equivalencia'))
+const Stock = lazy(() => import('./pages/Stock'))
+const Movimientos = lazy(() => import('./pages/Movimientos'))
+const Proveedores = lazy(() => import('./pages/Proveedores'))
+const Clientes = lazy(() => import('./pages/Clientes'))
+const Compras = lazy(() => import('./pages/Compras'))
+const Ventas = lazy(() => import('./pages/Ventas'))
+const Kardex = lazy(() => import('./pages/Kardex'))
+const Reportes = lazy(() => import('./pages/Reportes'))
+const Auditoria = lazy(() => import('./pages/Auditoria'))
+const Notificaciones = lazy(() => import('./pages/Notificaciones'))
+const Configuracion = lazy(() => import('./pages/Configuracion'))
+const CatalogoPublico = lazy(() => import('./pages/CatalogoPublico'))
+const Promociones = lazy(() => import('./pages/Promociones'))
+const Usuarios = lazy(() => import('./pages/Usuarios'))
+const PortalCliente = lazy(() => import('./pages/PortalCliente'))
+const LegalPage = lazy(() => import('./pages/LegalPage'))
+
+function LazyPage({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
+}
 
 function App() {
   return (
-    <BrowserRouter>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <NotificationProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<LazyPage><Landing /></LazyPage>} />
+                <Route path="/login" element={<RequireGuest><LazyPage><Login /></LazyPage></RequireGuest>} />
+                <Route path="/register" element={<RequireGuest><LazyPage><Register /></LazyPage></RequireGuest>} />
+                <Route path="/forgot-password" element={<RequireGuest><LazyPage><ForgotPassword /></LazyPage></RequireGuest>} />
+                <Route path="/reset-password" element={<RequireGuest><LazyPage><ResetPassword /></LazyPage></RequireGuest>} />
+                <Route path="/catalogo" element={<LazyPage><CatalogoPublico /></LazyPage>} />
+                <Route path="/promociones" element={<LazyPage><Promociones /></LazyPage>} />
+                <Route path="/legal/:type" element={<LazyPage><LegalPage /></LazyPage>} />
 
-      <Navbar />
+                <Route
+                  path="/app"
+                  element={
+                    <RequireAuth>
+                      <AppLayout />
+                    </RequireAuth>
+                  }
+                >
+                  <Route index element={<LazyPage><Dashboard /></LazyPage>} />
+                  <Route path="analytics" element={<LazyPage><Analytics /></LazyPage>} />
+                  <Route path="productos" element={<LazyPage><Productos /></LazyPage>} />
+                  <Route path="categorias" element={<LazyPage><Categorias /></LazyPage>} />
+                  <Route path="subcategorias" element={<LazyPage><Subcategorias /></LazyPage>} />
+                  <Route path="unidades" element={<LazyPage><Unidad_medida /></LazyPage>} />
+                  <Route path="equivalencias" element={<LazyPage><Equivalencia /></LazyPage>} />
+                  <Route path="stock" element={<LazyPage><Stock /></LazyPage>} />
+                  <Route path="movimientos" element={<LazyPage><Movimientos /></LazyPage>} />
+                  <Route path="proveedores" element={<LazyPage><Proveedores /></LazyPage>} />
+                  <Route path="clientes" element={<LazyPage><Clientes /></LazyPage>} />
+                  <Route path="compras" element={<LazyPage><Compras /></LazyPage>} />
+                  <Route path="ventas" element={<LazyPage><Ventas /></LazyPage>} />
+                  <Route path="kardex" element={<LazyPage><Kardex /></LazyPage>} />
+                  <Route path="reportes" element={<LazyPage><Reportes /></LazyPage>} />
+                  <Route path="auditoria" element={<LazyPage><Auditoria /></LazyPage>} />
+                  <Route path="notificaciones" element={<LazyPage><Notificaciones /></LazyPage>} />
+                  <Route path="portal" element={<LazyPage><PortalCliente /></LazyPage>} />
+                  <Route path="usuarios" element={<LazyPage><Usuarios /></LazyPage>} />
+                  <Route path="configuracion" element={<LazyPage><Configuracion /></LazyPage>} />
+                </Route>
 
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/productos" element={<Productos />} />
-        <Route path="/categorias" element={<Categorias />} />
-        <Route path="/subcategorias" element={<Subcategorias />} />
-        <Route path="/unidad_medida" element={<Unidad_medida />} />
-        <Route path="/equivalencia" element={<Equivalencia />} />
-        <Route path="/stock" element={<Stock />} />
-        <Route path="/movimientos" element={<Movimientos />} />
-      </Routes>
-
-    </BrowserRouter>
+                <Route path="/dashboard" element={<Navigate to="/app" replace />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </NotificationProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   )
 }
 

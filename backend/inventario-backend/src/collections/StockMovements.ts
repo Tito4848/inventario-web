@@ -4,6 +4,7 @@ import { adminOnly, inventoryReadAccess, inventoryWriteAccess } from '@/access/r
 import { allocateFIFO } from '@/lib/inventory/fifo'
 import { upsertStockLevel } from '@/lib/inventory/stockLevels'
 import { convertQuantity, getConversionFactor } from '@/lib/inventory/units'
+import { createKardexEntry } from '@/lib/inventory/kardex'
 
 const MOVEMENT_TYPES = ['in', 'out', 'adjust_in', 'adjust_out'] as const
 type MovementType = (typeof MOVEMENT_TYPES)[number]
@@ -292,6 +293,21 @@ export const StockMovements: CollectionConfig = {
             deltaValue: totalValue,
           })
 
+          await createKardexEntry({
+            req,
+            product: productId,
+            rack: rackId,
+            movementId: String(dr?.id ?? ''),
+            lotId: undefined,
+            entryType: 'in',
+            quantityBase: qtyBase,
+            unitCostBase,
+            value: totalValue,
+            balanceQtyBase: qtyBase,
+            balanceValue: totalValue,
+            occurredAt: receivedAt,
+          })
+
           return doc
         }
 
@@ -329,6 +345,21 @@ export const StockMovements: CollectionConfig = {
             rack: rackId,
             deltaQtyBase: -qtyBase,
             deltaValue: -totalValue,
+          })
+
+          await createKardexEntry({
+            req,
+            product: productId,
+            rack: rackId,
+            movementId: String(dr?.id ?? ''),
+            lotId: undefined,
+            entryType: 'out',
+            quantityBase: qtyBase,
+            unitCostBase: qtyBase === 0 ? 0 : totalValue / qtyBase,
+            value: totalValue,
+            balanceQtyBase: -qtyBase,
+            balanceValue: -totalValue,
+            occurredAt: receivedAt,
           })
 
           return doc

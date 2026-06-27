@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --radius: 12px;
+  --surface: 255 255 255;
+  --surface-elevated: 248 250 252;
+  --surface-border: 226 232 240;
+  --text-primary: 15 23 42;
+  --text-muted: 100 116 139;
+}
+
+.dark {
+  --surface: 15 23 42;
+  --surface-elevated: 30 41 59;
+  --surface-border: 51 65 85;
+  --text-primary: 248 250 252;
+  --text-muted: 148 163 184;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface text-slate-900 antialiased dark:text-slate-100;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply rounded-2xl border border-surface-border/60 bg-white/70 shadow-soft backdrop-blur-md dark:bg-slate-900/60;
+  }
+
+  .glass-card-strong {
+    @apply rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 shadow-glass backdrop-blur-xl dark:from-slate-800/40 dark:to-slate-900/40;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:opacity-95 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-surface-border bg-surface-elevated px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-surface-border bg-surface-elevated px-4 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:bg-slate-800/50;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80;
+  }
+
+  .sidebar-link-active {
+    @apply bg-primary-500/10 text-primary-600 dark:bg-primary-500/15 dark:text-primary-400;
+  }
+}

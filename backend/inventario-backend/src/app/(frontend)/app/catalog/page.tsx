@@ -1,4 +1,11 @@
 import React from 'react'
+import { headers as getHeaders } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { getPayload } from 'payload'
+
+import configPromise from '@payload-config'
+import { canAccessModule, getDefaultAppRoute } from '@/access/permissions'
+import type { User } from '@/payload-types'
 
 const items = [
   { name: 'Productos', href: '/admin/collections/products' },
@@ -11,7 +18,15 @@ const items = [
   { name: 'Usuarios', href: '/admin/collections/users' },
 ]
 
-export default function CatalogPage() {
+export default async function CatalogPage() {
+  const headers = await getHeaders()
+  const payload = await getPayload({ config: configPromise })
+  const { user } = await payload.auth({ headers })
+  if (!user) redirect('/login')
+
+  const u = user as User
+  if (!canAccessModule(u, 'products')) redirect(getDefaultAppRoute(u))
+
   return (
     <div className="card">
       <div className="cardHeader">
@@ -35,4 +50,3 @@ export default function CatalogPage() {
     </div>
   )
 }
-

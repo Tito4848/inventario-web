@@ -1,3 +1,4 @@
+import type { Where } from 'payload'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
     return Response.json({ error: 'Missing product' }, { status: 400 })
   }
 
-  const and: Record<string, unknown>[] = [{ product: { equals: product } }]
+  const and: Where[] = [{ product: { equals: product } }]
   if (rack) and.push({ rack: { equals: rack } })
   if (from) and.push({ date: { greater_than_equal: from } })
   if (to) and.push({ date: { less_than_equal: to } })

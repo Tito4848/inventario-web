@@ -4,9 +4,21 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 
 import configPromise from '@payload-config'
+import { canAccessModule, formatUserRoles } from '@/access/permissions'
+import type { User } from '@/payload-types'
 
 import { LogoutButton } from './ui'
-import type { User } from '@/payload-types'
+
+type NavItem = { href: string; label: string; module: Parameters<typeof canAccessModule>[1] }
+
+const navItems: NavItem[] = [
+  { href: '/app', label: 'Dashboard', module: 'dashboard' },
+  { href: '/app/portal', label: 'Mi portal', module: 'portal' },
+  { href: '/app/catalog', label: 'Catálogos', module: 'products' },
+  { href: '/app/movements/new', label: 'Movimiento', module: 'movements' },
+  { href: '/app/stock', label: 'Stock', module: 'stock' },
+  { href: '/app/kardex', label: 'Kardex FIFO', module: 'kardex' },
+]
 
 export default async function AppLayout(props: { children: React.ReactNode }) {
   const headers = await getHeaders()
@@ -15,32 +27,38 @@ export default async function AppLayout(props: { children: React.ReactNode }) {
 
   if (!user) redirect('/login')
 
-  const u = user as unknown as User
-  const roles = Array.isArray(u.roles) ? u.roles.join(', ') : ''
+  const u = user as User
+  const rolesLabel = formatUserRoles(u)
+  const visibleNav = navItems.filter((item) => {
+    if (item.module === 'portal' && canAccessModule(u, 'dashboard')) return false
+    return canAccessModule(u, item.module)
+  })
 
   return (
     <div className="appShell">
       <div className="topBar">
         <div className="topBarInner">
           <div className="row" style={{ gap: 14 }}>
-            <a className="brand" href="/app">
+            <a className="brand" href={visibleNav[0]?.href ?? '/app'}>
               <span style={{ color: 'var(--accent)' }}>●</span>
               Inventario Web
             </a>
             <span className="pill">{u.email}</span>
-            {roles && <span className="pill">Rol: {roles}</span>}
+            {rolesLabel && <span className="pill">Rol: {rolesLabel}</span>}
           </div>
 
           <div className="row" style={{ justifyContent: 'flex-end', flex: 1 }}>
             <nav className="nav">
-              <a href="/app">Dashboard</a>
-              <a href="/app/catalog">Catálogos</a>
-              <a href="/app/movements/new">Movimiento</a>
-              <a href="/app/stock">Stock</a>
-              <a href="/app/kardex">Kardex FIFO</a>
-              <a href="/admin" target="_blank" rel="noreferrer">
-                Admin
-              </a>
+              {visibleNav.map((item) => (
+                <a key={item.href} href={item.href}>
+                  {item.label}
+                </a>
+              ))}
+              {canAccessModule(u, 'users') && (
+                <a href="/admin" target="_blank" rel="noreferrer">
+                  Admin
+                </a>
+              )}
             </nav>
             <LogoutButton />
           </div>
@@ -53,4 +71,3 @@ export default async function AppLayout(props: { children: React.ReactNode }) {
     </div>
   )
 }
-

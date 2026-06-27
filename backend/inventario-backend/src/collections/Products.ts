@@ -21,7 +21,18 @@ export const Products: CollectionConfig = {
       required: true,
       unique: true,
       index: true,
-      label: 'Código',
+      label: 'Código / SKU',
+    },
+    {
+      name: 'barcode',
+      type: 'text',
+      label: 'Código de barras',
+      index: true,
+    },
+    {
+      name: 'qrCode',
+      type: 'text',
+      label: 'Código QR',
     },
     {
       name: 'name',
@@ -38,6 +49,13 @@ export const Products: CollectionConfig = {
       index: true,
     },
     {
+      name: 'subcategory',
+      type: 'relationship',
+      relationTo: 'subcategories',
+      label: 'Subcategoría',
+      index: true,
+    },
+    {
       name: 'baseUnit',
       type: 'relationship',
       relationTo: 'units',
@@ -46,11 +64,66 @@ export const Products: CollectionConfig = {
       index: true,
     },
     {
+      name: 'supplier',
+      type: 'relationship',
+      relationTo: 'suppliers',
+      label: 'Proveedor',
+    },
+    {
+      name: 'purchasePrice',
+      type: 'number',
+      min: 0,
+      label: 'Precio compra',
+    },
+    {
+      name: 'salePrice',
+      type: 'number',
+      min: 0,
+      label: 'Precio venta',
+    },
+    {
+      name: 'taxRate',
+      type: 'number',
+      min: 0,
+      max: 100,
+      defaultValue: 18,
+      label: 'Impuesto (%)',
+    },
+    {
       name: 'minStockBase',
       type: 'number',
       defaultValue: 0,
       min: 0,
       label: 'Stock mínimo (en unidad base)',
+    },
+    {
+      name: 'trackInventory',
+      type: 'checkbox',
+      defaultValue: true,
+      label: 'Controlar inventario',
+    },
+    {
+      name: 'allowNegativeStock',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Permitir stock negativo',
+    },
+    {
+      name: 'maxStockBase',
+      type: 'number',
+      min: 0,
+      label: 'Stock máximo (en unidad base)',
+    },
+    {
+      name: 'status',
+      type: 'select',
+      defaultValue: 'active',
+      options: [
+        { label: 'Activo', value: 'active' },
+        { label: 'Inactivo', value: 'inactive' },
+        { label: 'Descontinuado', value: 'discontinued' },
+      ],
+      index: true,
     },
     {
       name: 'active',
@@ -70,7 +143,36 @@ export const Products: CollectionConfig = {
       type: 'textarea',
       label: 'Descripción',
     },
+    {
+      name: 'createdBy',
+      type: 'relationship',
+      relationTo: 'users',
+      label: 'Registrado por',
+      admin: { readOnly: true },
+      index: true,
+    },
   ],
+  hooks: {
+    beforeValidate: [
+      async ({ data, req, operation }) => {
+        if (!data) return data
+
+        if (operation === 'create' && !data.createdBy && req.user?.id) {
+          data.createdBy = req.user.id
+        }
+
+        if (!data.code) {
+          throw new Error('El código del producto es obligatorio.')
+        }
+
+        if (!data.name) {
+          throw new Error('El nombre del producto es obligatorio.')
+        }
+
+        return data
+      },
+    ],
+  },
   timestamps: true,
 }
 

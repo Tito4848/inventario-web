@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 
 import configPromise from '@payload-config'
+import { canReadInventoryData, getDefaultAppRoute } from '@/access/permissions'
+import type { User } from '@/payload-types'
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
@@ -21,21 +23,27 @@ export default async function DashboardPage() {
   const { user } = await payload.auth({ headers })
   if (!user) redirect('/login')
 
+  const u = user as User
+
+  if (!canReadInventoryData(u)) {
+    redirect(getDefaultAppRoute(u))
+  }
+
   const [products, movements, levels] = await Promise.all([
-    payload.find({ collection: 'products', limit: 0, user, overrideAccess: false }),
+    payload.find({ collection: 'products', limit: 0, user: u, overrideAccess: false }),
     payload.find({
       collection: 'stock-movements',
       limit: 5,
       sort: '-date',
       depth: 2,
-      user,
+      user: u,
       overrideAccess: false,
     }),
     payload.find({
       collection: 'stock-levels',
       limit: 200,
       depth: 2,
-      user,
+      user: u,
       overrideAccess: false,
     }),
   ])
@@ -120,14 +128,14 @@ export default async function DashboardPage() {
                   const product = asRecord(mr.product)
                   const rack = asRecord(mr.rack)
                   return (
-                  <tr key={String(mr.id ?? '')}>
-                    <td>{new Date(String(mr.date)).toLocaleString()}</td>
-                    <td>{String(mr.movementType)}</td>
-                    <td>{String(product?.name ?? mr.product ?? '')}</td>
-                    <td>{String(rack?.name ?? mr.rack ?? '')}</td>
-                    <td>{num(mr.quantityBase, 0).toFixed(4)}</td>
-                    <td>{num(mr.totalValue, 0).toFixed(2)}</td>
-                  </tr>
+                    <tr key={String(mr.id ?? '')}>
+                      <td>{new Date(String(mr.date)).toLocaleString()}</td>
+                      <td>{String(mr.movementType)}</td>
+                      <td>{String(product?.name ?? mr.product ?? '')}</td>
+                      <td>{String(rack?.name ?? mr.rack ?? '')}</td>
+                      <td>{num(mr.quantityBase, 0).toFixed(4)}</td>
+                      <td>{num(mr.totalValue, 0).toFixed(2)}</td>
+                    </tr>
                   )
                 })}
                 {!movements.docs.length && (
@@ -145,4 +153,3 @@ export default async function DashboardPage() {
     </div>
   )
 }
-

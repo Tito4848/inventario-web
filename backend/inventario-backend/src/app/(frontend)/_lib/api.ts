@@ -1,5 +1,20 @@
+function getAuthHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const headers: Record<string, string> = { ...extra }
+  if (typeof window === 'undefined') return headers
+
+  const token =
+    window.sessionStorage.getItem('inventario_token') ||
+    window.localStorage.getItem('inventario_token')
+
+  if (token) headers.Authorization = `JWT ${token}`
+  return headers
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(path, { credentials: 'include' })
+  const res = await fetch(path, {
+    credentials: 'include',
+    headers: getAuthHeaders(),
+  })
   if (!res.ok) {
     let payload: unknown = null
     try {
@@ -16,7 +31,7 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(path, {
     method: 'POST',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(body),
   })
   if (!res.ok) {
@@ -49,3 +64,9 @@ function extractPayloadError(payload: unknown): string | null {
   return null
 }
 
+export function clearClientAuth() {
+  if (typeof window === 'undefined') return
+  window.sessionStorage.removeItem('inventario_token')
+  window.localStorage.removeItem('inventario_token')
+  window.localStorage.removeItem('inventario_remember_session')
+}

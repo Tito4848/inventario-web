@@ -69,7 +69,9 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    roles: Role;
     categories: Category;
+    subcategories: Subcategory;
     units: Unit;
     'unit-equivalences': UnitEquivalence;
     warehouses: Warehouse;
@@ -79,6 +81,15 @@ export interface Config {
     'stock-levels': StockLevel;
     'stock-lots': StockLot;
     'stock-movements': StockMovement;
+    'kardex-entries': KardexEntry;
+    suppliers: Supplier;
+    customers: Customer;
+    'purchase-orders': PurchaseOrder;
+    'sales-orders': SalesOrder;
+    'audit-logs': AuditLog;
+    returns: Return;
+    notifications: Notification;
+    settings: Setting;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -88,7 +99,9 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    roles: RolesSelect<false> | RolesSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    subcategories: SubcategoriesSelect<false> | SubcategoriesSelect<true>;
     units: UnitsSelect<false> | UnitsSelect<true>;
     'unit-equivalences': UnitEquivalencesSelect<false> | UnitEquivalencesSelect<true>;
     warehouses: WarehousesSelect<false> | WarehousesSelect<true>;
@@ -98,6 +111,15 @@ export interface Config {
     'stock-levels': StockLevelsSelect<false> | StockLevelsSelect<true>;
     'stock-lots': StockLotsSelect<false> | StockLotsSelect<true>;
     'stock-movements': StockMovementsSelect<false> | StockMovementsSelect<true>;
+    'kardex-entries': KardexEntriesSelect<false> | KardexEntriesSelect<true>;
+    suppliers: SuppliersSelect<false> | SuppliersSelect<true>;
+    customers: CustomersSelect<false> | CustomersSelect<true>;
+    'purchase-orders': PurchaseOrdersSelect<false> | PurchaseOrdersSelect<true>;
+    'sales-orders': SalesOrdersSelect<false> | SalesOrdersSelect<true>;
+    'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
+    returns: ReturnsSelect<false> | ReturnsSelect<true>;
+    notifications: NotificationsSelect<false> | NotificationsSelect<true>;
+    settings: SettingsSelect<false> | SettingsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -143,8 +165,18 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: string;
-  roles: ('admin' | 'operator' | 'viewer')[];
+  /**
+   * Roles legacy (guest, seller, operator, viewer) se conservan en usuarios existentes; asignar solo los cinco roles canónicos.
+   */
+  roles: ('admin' | 'supervisor' | 'warehouse' | 'client' | 'invitado' | 'guest' | 'seller' | 'operator' | 'viewer')[];
   fullName?: string | null;
+  status: 'active' | 'inactive' | 'locked';
+  lastLoginAt?: string | null;
+  /**
+   * Vincula este usuario con su ficha de cliente (rol Cliente).
+   */
+  customerProfile?: (string | null) | Customer;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -163,6 +195,24 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers".
+ */
+export interface Customer {
+  id: string;
+  linkedUser?: (string | null) | User;
+  name: string;
+  taxId?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  contactName?: string | null;
+  active?: boolean | null;
+  createdBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -185,6 +235,29 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "roles".
+ */
+export interface Role {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  permissions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  isActive?: boolean | null;
+  createdBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories".
  */
 export interface Category {
@@ -194,6 +267,24 @@ export interface Category {
   parent?: (string | null) | Category;
   active?: boolean | null;
   description?: string | null;
+  createdBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subcategories".
+ */
+export interface Subcategory {
+  id: string;
+  code: string;
+  name: string;
+  slug?: string | null;
+  category: string | Category;
+  description?: string | null;
+  isActive?: boolean | null;
+  sortOrder?: number | null;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -206,6 +297,7 @@ export interface Unit {
   name: string;
   abbreviation: string;
   active?: boolean | null;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -226,6 +318,7 @@ export interface UnitEquivalence {
    */
   factor: number;
   active?: boolean | null;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -239,6 +332,7 @@ export interface Warehouse {
   name: string;
   active?: boolean | null;
   address?: string | null;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -252,6 +346,7 @@ export interface Section {
   code: string;
   name: string;
   active?: boolean | null;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -266,6 +361,7 @@ export interface Rack {
   name: string;
   active?: boolean | null;
   notes?: string | null;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -276,13 +372,42 @@ export interface Rack {
 export interface Product {
   id: string;
   code: string;
+  barcode?: string | null;
+  qrCode?: string | null;
   name: string;
   category?: (string | null) | Category;
+  subcategory?: (string | null) | Subcategory;
   baseUnit: string | Unit;
+  supplier?: (string | null) | Supplier;
+  purchasePrice?: number | null;
+  salePrice?: number | null;
+  taxRate?: number | null;
   minStockBase?: number | null;
+  trackInventory?: boolean | null;
+  allowNegativeStock?: boolean | null;
+  maxStockBase?: number | null;
+  status?: ('active' | 'inactive' | 'discontinued') | null;
   active?: boolean | null;
   image?: (string | null) | Media;
   description?: string | null;
+  createdBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suppliers".
+ */
+export interface Supplier {
+  id: string;
+  businessName: string;
+  taxId: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  contactName?: string | null;
+  active?: boolean | null;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -297,6 +422,7 @@ export interface StockLevel {
   rack: string | Rack;
   quantityBase: number;
   value: number;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -314,6 +440,7 @@ export interface StockLot {
   qtyRemainingBase: number;
   unitCostBase: number;
   sourceMovement: string | StockMovement;
+  createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
 }
@@ -350,6 +477,188 @@ export interface StockMovement {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "kardex-entries".
+ */
+export interface KardexEntry {
+  id: string;
+  label?: string | null;
+  product: string | Product;
+  rack: string | Rack;
+  movement: string | StockMovement;
+  lot?: (string | null) | StockLot;
+  entryType: 'in' | 'out';
+  quantityBase: number;
+  unitCostBase?: number | null;
+  value?: number | null;
+  balanceQtyBase: number;
+  balanceValue: number;
+  occurredAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "purchase-orders".
+ */
+export interface PurchaseOrder {
+  id: string;
+  orderNumber: string;
+  supplier: string | Supplier;
+  status: 'draft' | 'sent' | 'partial' | 'received' | 'invoiced' | 'cancelled';
+  orderDate: string;
+  receivedDate?: string | null;
+  invoiceNumber?: string | null;
+  items?:
+    | {
+        product: string | Product;
+        quantity: number;
+        unitCost: number;
+        total?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  subtotal?: number | null;
+  tax?: number | null;
+  total?: number | null;
+  notes?: string | null;
+  createdBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sales-orders".
+ */
+export interface SalesOrder {
+  id: string;
+  orderNumber: string;
+  customer?: (string | null) | Customer;
+  status: 'draft' | 'confirmed' | 'delivered' | 'cancelled';
+  saleDate: string;
+  items?:
+    | {
+        product: string | Product;
+        quantity: number;
+        unitPrice: number;
+        discount?: number | null;
+        total?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  subtotal?: number | null;
+  discountAmount?: number | null;
+  tax?: number | null;
+  total?: number | null;
+  notes?: string | null;
+  createdBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs".
+ */
+export interface AuditLog {
+  id: string;
+  user?: (string | null) | User;
+  action: string;
+  module: string;
+  resourceId?: string | null;
+  details?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  ip?: string | null;
+  userAgent?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "returns".
+ */
+export interface Return {
+  id: string;
+  type: 'purchase' | 'sale';
+  referenceType: 'purchase-order' | 'sales-order';
+  referenceId: string;
+  reason: string;
+  status?: ('requested' | 'approved' | 'rejected' | 'processed') | null;
+  items?:
+    | {
+        product: string | Product;
+        quantity: number;
+        unit: string | Unit;
+        unitCost?: number | null;
+        unitPrice?: number | null;
+        lineTotal: number;
+        id?: string | null;
+      }[]
+    | null;
+  total?: number | null;
+  createdBy?: (string | null) | User;
+  approvedBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications".
+ */
+export interface Notification {
+  id: string;
+  recipient: string | User;
+  title: string;
+  message: string;
+  type?: ('info' | 'warning' | 'success' | 'error') | null;
+  priority?: ('low' | 'medium' | 'high') | null;
+  isRead?: boolean | null;
+  entityType?: string | null;
+  entityId?: string | null;
+  metadata?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  expiresAt?: string | null;
+  createdBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "settings".
+ */
+export interface Setting {
+  id: string;
+  key: string;
+  value:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  scope: 'global' | 'warehouse' | 'role' | 'user';
+  scopeId?: string | null;
+  description?: string | null;
+  updatedBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -381,8 +690,16 @@ export interface PayloadLockedDocument {
         value: string | Media;
       } | null)
     | ({
+        relationTo: 'roles';
+        value: string | Role;
+      } | null)
+    | ({
         relationTo: 'categories';
         value: string | Category;
+      } | null)
+    | ({
+        relationTo: 'subcategories';
+        value: string | Subcategory;
       } | null)
     | ({
         relationTo: 'units';
@@ -419,6 +736,42 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'stock-movements';
         value: string | StockMovement;
+      } | null)
+    | ({
+        relationTo: 'kardex-entries';
+        value: string | KardexEntry;
+      } | null)
+    | ({
+        relationTo: 'suppliers';
+        value: string | Supplier;
+      } | null)
+    | ({
+        relationTo: 'customers';
+        value: string | Customer;
+      } | null)
+    | ({
+        relationTo: 'purchase-orders';
+        value: string | PurchaseOrder;
+      } | null)
+    | ({
+        relationTo: 'sales-orders';
+        value: string | SalesOrder;
+      } | null)
+    | ({
+        relationTo: 'audit-logs';
+        value: string | AuditLog;
+      } | null)
+    | ({
+        relationTo: 'returns';
+        value: string | Return;
+      } | null)
+    | ({
+        relationTo: 'notifications';
+        value: string | Notification;
+      } | null)
+    | ({
+        relationTo: 'settings';
+        value: string | Setting;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -469,6 +822,10 @@ export interface PayloadMigration {
 export interface UsersSelect<T extends boolean = true> {
   roles?: T;
   fullName?: T;
+  status?: T;
+  lastLoginAt?: T;
+  customerProfile?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -506,6 +863,20 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "roles_select".
+ */
+export interface RolesSelect<T extends boolean = true> {
+  code?: T;
+  name?: T;
+  description?: T;
+  permissions?: T;
+  isActive?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories_select".
  */
 export interface CategoriesSelect<T extends boolean = true> {
@@ -514,6 +885,23 @@ export interface CategoriesSelect<T extends boolean = true> {
   parent?: T;
   active?: T;
   description?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subcategories_select".
+ */
+export interface SubcategoriesSelect<T extends boolean = true> {
+  code?: T;
+  name?: T;
+  slug?: T;
+  category?: T;
+  description?: T;
+  isActive?: T;
+  sortOrder?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -525,6 +913,7 @@ export interface UnitsSelect<T extends boolean = true> {
   name?: T;
   abbreviation?: T;
   active?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -538,6 +927,7 @@ export interface UnitEquivalencesSelect<T extends boolean = true> {
   toUnit?: T;
   factor?: T;
   active?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -550,6 +940,7 @@ export interface WarehousesSelect<T extends boolean = true> {
   name?: T;
   active?: T;
   address?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -562,6 +953,7 @@ export interface SectionsSelect<T extends boolean = true> {
   code?: T;
   name?: T;
   active?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -575,6 +967,7 @@ export interface RacksSelect<T extends boolean = true> {
   name?: T;
   active?: T;
   notes?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -584,13 +977,25 @@ export interface RacksSelect<T extends boolean = true> {
  */
 export interface ProductsSelect<T extends boolean = true> {
   code?: T;
+  barcode?: T;
+  qrCode?: T;
   name?: T;
   category?: T;
+  subcategory?: T;
   baseUnit?: T;
+  supplier?: T;
+  purchasePrice?: T;
+  salePrice?: T;
+  taxRate?: T;
   minStockBase?: T;
+  trackInventory?: T;
+  allowNegativeStock?: T;
+  maxStockBase?: T;
+  status?: T;
   active?: T;
   image?: T;
   description?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -604,6 +1009,7 @@ export interface StockLevelsSelect<T extends boolean = true> {
   rack?: T;
   quantityBase?: T;
   value?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -620,6 +1026,7 @@ export interface StockLotsSelect<T extends boolean = true> {
   qtyRemainingBase?: T;
   unitCostBase?: T;
   sourceMovement?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -650,6 +1057,190 @@ export interface StockMovementsSelect<T extends boolean = true> {
         value?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "kardex-entries_select".
+ */
+export interface KardexEntriesSelect<T extends boolean = true> {
+  label?: T;
+  product?: T;
+  rack?: T;
+  movement?: T;
+  lot?: T;
+  entryType?: T;
+  quantityBase?: T;
+  unitCostBase?: T;
+  value?: T;
+  balanceQtyBase?: T;
+  balanceValue?: T;
+  occurredAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "suppliers_select".
+ */
+export interface SuppliersSelect<T extends boolean = true> {
+  businessName?: T;
+  taxId?: T;
+  address?: T;
+  phone?: T;
+  email?: T;
+  contactName?: T;
+  active?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customers_select".
+ */
+export interface CustomersSelect<T extends boolean = true> {
+  linkedUser?: T;
+  name?: T;
+  taxId?: T;
+  address?: T;
+  phone?: T;
+  email?: T;
+  contactName?: T;
+  active?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "purchase-orders_select".
+ */
+export interface PurchaseOrdersSelect<T extends boolean = true> {
+  orderNumber?: T;
+  supplier?: T;
+  status?: T;
+  orderDate?: T;
+  receivedDate?: T;
+  invoiceNumber?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        unitCost?: T;
+        total?: T;
+        id?: T;
+      };
+  subtotal?: T;
+  tax?: T;
+  total?: T;
+  notes?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sales-orders_select".
+ */
+export interface SalesOrdersSelect<T extends boolean = true> {
+  orderNumber?: T;
+  customer?: T;
+  status?: T;
+  saleDate?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        unitPrice?: T;
+        discount?: T;
+        total?: T;
+        id?: T;
+      };
+  subtotal?: T;
+  discountAmount?: T;
+  tax?: T;
+  total?: T;
+  notes?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs_select".
+ */
+export interface AuditLogsSelect<T extends boolean = true> {
+  user?: T;
+  action?: T;
+  module?: T;
+  resourceId?: T;
+  details?: T;
+  ip?: T;
+  userAgent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "returns_select".
+ */
+export interface ReturnsSelect<T extends boolean = true> {
+  type?: T;
+  referenceType?: T;
+  referenceId?: T;
+  reason?: T;
+  status?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        unit?: T;
+        unitCost?: T;
+        unitPrice?: T;
+        lineTotal?: T;
+        id?: T;
+      };
+  total?: T;
+  createdBy?: T;
+  approvedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications_select".
+ */
+export interface NotificationsSelect<T extends boolean = true> {
+  recipient?: T;
+  title?: T;
+  message?: T;
+  type?: T;
+  priority?: T;
+  isRead?: T;
+  entityType?: T;
+  entityId?: T;
+  metadata?: T;
+  expiresAt?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "settings_select".
+ */
+export interface SettingsSelect<T extends boolean = true> {
+  key?: T;
+  value?: T;
+  scope?: T;
+  scopeId?: T;
+  description?: T;
+  updatedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

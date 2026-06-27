@@ -17,9 +17,23 @@ import { Products } from './collections/Products'
 import { StockLevels } from './collections/StockLevels'
 import { StockLots } from './collections/StockLots'
 import { StockMovements } from './collections/StockMovements'
+import { Suppliers } from './collections/Suppliers'
+import { Customers } from './collections/Customers'
+import { PurchaseOrders } from './collections/PurchaseOrders'
+import { SalesOrders } from './collections/SalesOrders'
+import { AuditLogs } from './collections/AuditLogs'
+import { Roles } from './collections/Roles'
+import { Subcategories } from './collections/Subcategories'
+import { Returns } from './collections/Returns'
+import { Notifications } from './collections/Notifications'
+import { Settings } from './collections/Settings'
+import { KardexEntries } from './collections/KardexEntries'
+import { getTrustedOrigins } from './lib/auth/config'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+const trustedOrigins = getTrustedOrigins()
 
 export default buildConfig({
   admin: {
@@ -31,7 +45,9 @@ export default buildConfig({
   collections: [
     Users,
     Media,
+    Roles,
     Categories,
+    Subcategories,
     Units,
     UnitEquivalences,
     Warehouses,
@@ -41,8 +57,19 @@ export default buildConfig({
     StockLevels,
     StockLots,
     StockMovements,
+    KardexEntries,
+    Suppliers,
+    Customers,
+    PurchaseOrders,
+    SalesOrders,
+    AuditLogs,
+    Returns,
+    Notifications,
+    Settings,
   ],
   editor: lexicalEditor(),
+  cors: trustedOrigins,
+  csrf: trustedOrigins,
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),

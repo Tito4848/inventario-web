@@ -1,3 +1,4 @@
+import type { Where } from 'payload'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 
@@ -16,10 +17,10 @@ export async function GET(request: Request) {
   const rack = url.searchParams.get('rack') || undefined
   const belowMin = url.searchParams.get('belowMin') === 'true'
 
-  const and: Record<string, unknown>[] = []
+  const and: Where[] = []
   if (product) and.push({ product: { equals: product } })
   if (rack) and.push({ rack: { equals: rack } })
-  const where = and.length ? ({ and } as const) : undefined
+  const where: Where | undefined = and.length ? { and } : undefined
 
   const levels = await payload.find({
     collection: 'stock-levels',

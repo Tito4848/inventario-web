@@ -41,7 +41,25 @@ export const Warehouses: CollectionConfig = {
       type: 'textarea',
       label: 'Dirección',
     },
+    {
+      name: 'createdBy',
+      type: 'relationship',
+      relationTo: 'users',
+      label: 'Registrado por',
+      admin: { readOnly: true },
+      index: true,
+    },
   ],
+  hooks: {
+    beforeValidate: [
+      async ({ data, req, operation }) => {
+        if (operation !== 'create') return data
+        if (!data) return data
+        if (!data.createdBy && req.user?.id) data.createdBy = req.user.id
+        return data
+      },
+    ],
+  },
   timestamps: true,
 }
 
