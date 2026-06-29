@@ -19,13 +19,18 @@ const Analytics = lazy(() => import('./pages/Analytics'))
 const Productos = lazy(() => import('./pages/Productos'))
 const Categorias = lazy(() => import('./pages/Categoria'))
 const Subcategorias = lazy(() => import('./pages/Subcategorias'))
+const Marcas = lazy(() => import('./pages/Marcas'))
 const Unidad_medida = lazy(() => import('./pages/Unidad_medida'))
 const Equivalencia = lazy(() => import('./pages/Equivalencia'))
+const Racks = lazy(() => import('./pages/Racks'))
 const Stock = lazy(() => import('./pages/Stock'))
 const Movimientos = lazy(() => import('./pages/Movimientos'))
 const Proveedores = lazy(() => import('./pages/Proveedores'))
 const Clientes = lazy(() => import('./pages/Clientes'))
 const Compras = lazy(() => import('./pages/Compras'))
+const CompraNueva = lazy(() => import('./pages/CompraNueva'))
+const CompraDetalle = lazy(() => import('./pages/CompraDetalle'))
+const CompraRecepcion = lazy(() => import('./pages/CompraRecepcion'))
 const Ventas = lazy(() => import('./pages/Ventas'))
 const Kardex = lazy(() => import('./pages/Kardex'))
 const Reportes = lazy(() => import('./pages/Reportes'))
@@ -72,13 +77,18 @@ function App() {
                   <Route path="productos" element={<LazyPage><Productos /></LazyPage>} />
                   <Route path="categorias" element={<LazyPage><Categorias /></LazyPage>} />
                   <Route path="subcategorias" element={<LazyPage><Subcategorias /></LazyPage>} />
+                  <Route path="marcas" element={<LazyPage><Marcas /></LazyPage>} />
                   <Route path="unidades" element={<LazyPage><Unidad_medida /></LazyPage>} />
                   <Route path="equivalencias" element={<LazyPage><Equivalencia /></LazyPage>} />
+                  <Route path="racks" element={<LazyPage><Racks /></LazyPage>} />
                   <Route path="stock" element={<LazyPage><Stock /></LazyPage>} />
                   <Route path="movimientos" element={<LazyPage><Movimientos /></LazyPage>} />
                   <Route path="proveedores" element={<LazyPage><Proveedores /></LazyPage>} />
                   <Route path="clientes" element={<LazyPage><Clientes /></LazyPage>} />
                   <Route path="compras" element={<LazyPage><Compras /></LazyPage>} />
+                  <Route path="compras/nueva" element={<LazyPage><CompraNueva /></LazyPage>} />
+                  <Route path="compras/:id/recepcion" element={<LazyPage><CompraRecepcion /></LazyPage>} />
+                  <Route path="compras/:id" element={<LazyPage><CompraDetalle /></LazyPage>} />
                   <Route path="ventas" element={<LazyPage><Ventas /></LazyPage>} />
                   <Route path="kardex" element={<LazyPage><Kardex /></LazyPage>} />
                   <Route path="reportes" element={<LazyPage><Reportes /></LazyPage>} />

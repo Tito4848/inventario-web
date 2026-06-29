@@ -54,7 +54,7 @@ export async function fetchCollection<T>(
   slug: string,
   params?: Record<string, string | number | boolean | undefined>,
 ): Promise<PaginatedResponse<T>> {
-  return apiFetch(`/api/${slug}`, { params: { limit: 100, depth: 1, ...params } })
+  return apiFetch(`/api/${slug}`, { params: { limit: 200, depth: 1, ...params } })
 }
 
 export async function createDocument<T>(slug: string, data: Record<string, unknown>): Promise<T> {
@@ -84,6 +84,16 @@ export type DashboardStats = {
   monthlySales: number
   monthlyPurchases: number
   inventoryValue: number
+  purchaseStats?: {
+    dailyCount: number
+    monthlyCount: number
+    monthlyAmount: number
+    pendingOrders: number
+    receivedOrders: number
+    partialOrders: number
+    topSupplier?: { id: string; name: string; count: number; amount: number } | null
+    topProducts: Array<{ id: string; name: string; quantity: number }>
+  } | null
 }
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {
@@ -105,6 +115,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       monthlySales: 0,
       monthlyPurchases: 0,
       inventoryValue: 0,
+      purchaseStats: null,
     }
   }
 }

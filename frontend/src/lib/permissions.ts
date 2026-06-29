@@ -44,6 +44,12 @@ export type UserPermissions = {
   canCreateProducts?: boolean
   canEditProducts?: boolean
   canDeleteProducts?: boolean
+  canReadPurchases?: boolean
+  canCreatePurchases?: boolean
+  canUpdatePurchases?: boolean
+  canDeletePurchases?: boolean
+  canReceivePurchases?: boolean
+  canReportPurchases?: boolean
 }
 
 const LEGACY_ROLE_ALIASES: Partial<Record<LegacyRole, InventoryRole[]>> = {
@@ -168,8 +174,10 @@ export const navConfig: Array<{
       { to: '/app/productos', label: 'Productos', module: 'products' },
       { to: '/app/categorias', label: 'Categorías', module: 'categories' },
       { to: '/app/subcategorias', label: 'Subcategorías', module: 'categories' },
+      { to: '/app/marcas', label: 'Marcas', module: 'categories' },
       { to: '/app/unidades', label: 'Unidades', module: 'products' },
       { to: '/app/equivalencias', label: 'Equivalencias', module: 'products' },
+      { to: '/app/racks', label: 'Racks', module: 'stock' },
     ],
   },
   {

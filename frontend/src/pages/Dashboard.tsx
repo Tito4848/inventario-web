@@ -84,6 +84,24 @@ export default function Dashboard() {
         <StatCard title="Ventas del mes" value={formatCurrency(stats.monthlySales)} icon={ShoppingBag} />
         <StatCard title="Compras del mes" value={formatCurrency(stats.monthlyPurchases)} icon={DollarSign} />
       </div>
+
+      {stats.purchaseStats && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard title="Compras hoy" value={stats.purchaseStats.dailyCount} icon={ShoppingCart} />
+          <StatCard title="Compras del mes (cant.)" value={stats.purchaseStats.monthlyCount} icon={ShoppingCart} />
+          <StatCard title="Monto comprado" value={formatCurrency(stats.purchaseStats.monthlyAmount)} icon={DollarSign} />
+          <StatCard title="Órdenes pendientes" value={stats.purchaseStats.pendingOrders} icon={Package} />
+          <StatCard title="Órdenes recibidas" value={stats.purchaseStats.receivedOrders} icon={Package} />
+          <StatCard title="Recepciones parciales" value={stats.purchaseStats.partialOrders} icon={Package} />
+          {stats.purchaseStats.topSupplier && (
+            <StatCard
+              title="Proveedor top"
+              value={stats.purchaseStats.topSupplier.name}
+              icon={ShoppingCart}
+            />
+          )}
+        </div>
+      )}
     </div>
   )
 }

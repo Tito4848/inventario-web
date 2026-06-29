@@ -529,20 +529,40 @@ export interface PurchaseOrder {
   id: string;
   orderNumber: string;
   supplier: string | Supplier;
-  status: 'draft' | 'sent' | 'partial' | 'received' | 'invoiced' | 'cancelled';
+  status: 'draft' | 'pending' | 'sent' | 'partial' | 'received' | 'invoiced' | 'cancelled';
   orderDate: string;
   receivedDate?: string | null;
+  currency?: ('PEN' | 'USD') | null;
+  rack?: (string | null) | Rack;
   invoiceNumber?: string | null;
   items?:
     | {
         product: string | Product;
         quantity: number;
         unitCost: number;
+        discount?: number | null;
+        quantityReceived?: number | null;
         total?: number | null;
         id?: string | null;
       }[]
     | null;
+  receptions?:
+    | {
+        date: string;
+        receivedBy?: (string | null) | User;
+        notes?: string | null;
+        items?:
+          | {
+              product: string | Product;
+              quantity: number;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
   subtotal?: number | null;
+  discount?: number | null;
   tax?: number | null;
   total?: number | null;
   notes?: string | null;
@@ -1168,6 +1188,8 @@ export interface PurchaseOrdersSelect<T extends boolean = true> {
   status?: T;
   orderDate?: T;
   receivedDate?: T;
+  currency?: T;
+  rack?: T;
   invoiceNumber?: T;
   items?:
     | T
@@ -1175,10 +1197,28 @@ export interface PurchaseOrdersSelect<T extends boolean = true> {
         product?: T;
         quantity?: T;
         unitCost?: T;
+        discount?: T;
+        quantityReceived?: T;
         total?: T;
         id?: T;
       };
+  receptions?:
+    | T
+    | {
+        date?: T;
+        receivedBy?: T;
+        notes?: T;
+        items?:
+          | T
+          | {
+              product?: T;
+              quantity?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   subtotal?: T;
+  discount?: T;
   tax?: T;
   total?: T;
   notes?: T;

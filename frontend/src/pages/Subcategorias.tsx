@@ -1,33 +1,26 @@
-function Subcategorias() {
+import CatalogListPage from '../components/modules/CatalogListPage'
+
+export default function Subcategorias() {
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Subcategorias</h2>
-
-      <table border={1} cellPadding={10}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Categoria</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>Laptop</td>
-            <td>Tecnologia</td>
-          </tr>
-
-          <tr>
-            <td>2</td>
-            <td>Mouse</td>
-            <td>Tecnologia</td>
-           </tr> 
-        </tbody>
-      </table>
-    </div>
+    <CatalogListPage
+      title="Subcategorías"
+      description="Subcategorías vinculadas a cada categoría del catálogo"
+      collection="subcategories"
+      sort="name"
+      columns={[
+        { key: 'code', label: 'Código' },
+        { key: 'name', label: 'Nombre' },
+        {
+          key: 'category',
+          label: 'Categoría',
+          render: (row) => {
+            const cat = row.category
+            if (cat && typeof cat === 'object' && 'name' in cat) return String(cat.name)
+            return '-'
+          },
+        },
+        { key: 'isActive', label: 'Activo' },
+      ]}
+    />
   )
 }
-
-export default Subcategorias

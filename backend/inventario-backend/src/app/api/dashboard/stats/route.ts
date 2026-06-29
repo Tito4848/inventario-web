@@ -6,6 +6,8 @@ import {
   canReadInventoryData,
   getPrimaryRole,
 } from '@/access/permissions'
+import { canReadPurchases } from '@/access/purchasesAccess'
+import { computePurchaseStats } from '@/lib/purchases/stats'
 import type { User } from '@/payload-types'
 
 export async function GET(req: Request) {
@@ -48,6 +50,7 @@ export async function GET(req: Request) {
         monthlyPurchases: 0,
         inventoryValue: 0,
         myOrders: mySales.totalDocs,
+        purchaseStats: null,
       })
     }
 
@@ -181,6 +184,8 @@ export async function GET(req: Request) {
     const monthlyPurchases = purchaseOrders.docs.reduce((sum, o) => sum + (o.total || 0), 0)
     const monthlySales = salesOrders.docs.reduce((sum, o) => sum + (o.total || 0), 0)
 
+    const purchaseStats = canReadPurchases(u) ? await computePurchaseStats(payload, u) : null
+
     const dailyEntries = todayEntries.docs.length
     const dailyExits = todayExits.docs.length
     const dailyEntriesQty = todayEntries.docs.reduce((sum, m) => sum + (m.quantityBase || 0), 0)
@@ -203,6 +208,7 @@ export async function GET(req: Request) {
       monthlyPurchases,
       inventoryValue,
       myOrders: 0,
+      purchaseStats,
     })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Error'

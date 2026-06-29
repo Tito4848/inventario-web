@@ -1,11 +1,11 @@
 import EntityCrudModule from '../components/modules/EntityCrudModule'
 
-export default function Categorias() {
+export default function Marcas() {
   return (
     <EntityCrudModule
-      title="Categorías"
-      description="Catálogo maestro de categorías de productos"
-      collection="categories"
+      title="Marcas"
+      description="Marcas comerciales del catálogo de productos"
+      collection="brands"
       fields={[
         { key: 'code', label: 'Código', required: true },
         { key: 'name', label: 'Nombre', required: true },

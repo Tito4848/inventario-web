@@ -1,39 +1,39 @@
-function Equivalencia() {
+import CatalogListPage from '../components/modules/CatalogListPage'
+
+export default function Equivalencia() {
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Equivalencia</h2>
-
-      <table border={1} cellPadding={10}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Producto</th>
-            <th>Unidad_base</th>
-            <th>Unidad_equivalente</th>
-            <th>Factor</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>Laptop</td>
-            <td>Unidad</td>
-            <td>Caja</td>
-            <td>10</td>
-          </tr>
-
-          <tr>
-            <td>2</td>
-            <td>Mouse</td>
-            <td>Unidad</td>
-            <td>Caja</td>
-            <td>10</td>
-           </tr> 
-        </tbody>
-      </table>
-    </div>
+    <CatalogListPage
+      title="Equivalencias de unidades"
+      description="Factores de conversión entre unidades (ej. 1 Caja = 12 Unidades)"
+      collection="unit-equivalences"
+      sort="label"
+      columns={[
+        { key: 'label', label: 'Descripción' },
+        {
+          key: 'fromUnit',
+          label: 'Unidad origen',
+          render: (row) => {
+            const u = row.fromUnit
+            if (u && typeof u === 'object' && 'abbreviation' in u) {
+              return `${u.name} (${u.abbreviation})`
+            }
+            return '-'
+          },
+        },
+        {
+          key: 'toUnit',
+          label: 'Unidad destino',
+          render: (row) => {
+            const u = row.toUnit
+            if (u && typeof u === 'object' && 'abbreviation' in u) {
+              return `${u.name} (${u.abbreviation})`
+            }
+            return '-'
+          },
+        },
+        { key: 'factor', label: 'Factor' },
+        { key: 'active', label: 'Activo' },
+      ]}
+    />
   )
 }
-
-export default Equivalencia

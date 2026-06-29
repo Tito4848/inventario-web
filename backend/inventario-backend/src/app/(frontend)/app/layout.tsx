@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
   { href: '/app/movements', label: 'Historial', module: 'movements' },
   { href: '/app/stock', label: 'Stock', module: 'stock' },
   { href: '/app/kardex', label: 'Kardex FIFO', module: 'kardex' },
+  { href: '/app/compras', label: 'Compras', module: 'purchases' },
 ]
 
 export default async function AppLayout(props: { children: React.ReactNode }) {

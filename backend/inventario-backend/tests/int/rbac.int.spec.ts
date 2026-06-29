@@ -86,4 +86,11 @@ describe('RBAC roles', () => {
     expect(canAccessModule(userWithRoles(['operator']), 'purchases')).toBe(true)
     expect(canAccessModule(userWithRoles(['viewer']), 'products')).toBe(true)
   })
+
+  it('allows warehouse to receive purchases via purchasesAccess', async () => {
+    const { canReceivePurchases, canReadPurchases } = await import('@/access/purchasesAccess')
+    const warehouse = userWithRoles(['warehouse'])
+    expect(canReceivePurchases(warehouse)).toBe(true)
+    expect(canReadPurchases(warehouse)).toBe(false)
+  })
 })

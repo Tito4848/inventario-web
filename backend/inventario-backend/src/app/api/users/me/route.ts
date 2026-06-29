@@ -19,6 +19,14 @@ import {
   canEditProducts,
   canViewProductsModule,
 } from '@/access/productsAccess'
+import {
+  canCreatePurchases,
+  canDeletePurchases,
+  canReadPurchases,
+  canReceivePurchases,
+  canReportPurchases,
+  canUpdatePurchases,
+} from '@/access/purchasesAccess'
 import { sanitizeUser } from '@/lib/auth/sanitizeUser'
 import type { User } from '@/payload-types'
 
@@ -50,6 +58,12 @@ export async function GET(req: Request) {
         canCreateProducts: canCreateProducts(u),
         canEditProducts: canEditProducts(u),
         canDeleteProducts: canDeleteProducts(u),
+        canReadPurchases: canReadPurchases(u),
+        canCreatePurchases: canCreatePurchases(u),
+        canUpdatePurchases: canUpdatePurchases(u),
+        canDeletePurchases: canDeletePurchases(u),
+        canReceivePurchases: canReceivePurchases(u),
+        canReportPurchases: canReportPurchases(u),
       },
     })
   } catch (err: unknown) {

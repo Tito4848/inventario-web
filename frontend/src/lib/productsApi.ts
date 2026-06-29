@@ -117,7 +117,7 @@ export async function fetchProductLookups() {
     apiFetch<PaginatedResponse<{ id: string; name: string }>>('/api/suppliers', {
       params: { limit: 200, depth: 0, sort: 'name' },
     }),
-    apiFetch<PaginatedResponse<{ id: string; name: string; code?: string }>>('/api/units', {
+    apiFetch<PaginatedResponse<{ id: string; name: string; abbreviation?: string }>>('/api/units', {
       params: { limit: 200, depth: 0, sort: 'name' },
     }),
   ])
@@ -134,7 +134,7 @@ export async function fetchProductLookups() {
     suppliers: suppliers.docs.map((s) => ({ id: String(s.id), label: s.name })),
     units: units.docs.map((u) => ({
       id: String(u.id),
-      label: u.code ? `${u.name} (${u.code})` : u.name,
+      label: u.abbreviation ? `${u.name} (${u.abbreviation})` : u.name,
     })),
   }
 }
