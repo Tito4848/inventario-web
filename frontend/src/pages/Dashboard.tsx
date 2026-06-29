@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Navigate } from 'react-router-dom'
 import {
   AlertTriangle,
+  ArrowDownCircle,
+  ArrowUpCircle,
   Box,
   DollarSign,
   Package,
@@ -61,6 +63,21 @@ export default function Dashboard() {
         <StatCard title="Stock bajo" value={stats.lowStock} icon={AlertTriangle} trend="down" />
         <StatCard title="Sin stock" value={stats.outOfStock} icon={XCircle} trend="down" />
         <StatCard title="Valor inventario" value={formatCurrency(stats.inventoryValue)} icon={Warehouse} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Entradas hoy" value={stats.dailyEntries} icon={ArrowDownCircle} />
+        <StatCard title="Salidas hoy" value={stats.dailyExits} icon={ArrowUpCircle} />
+        <StatCard
+          title="Cant. entradas hoy"
+          value={stats.dailyEntriesQty.toFixed(2)}
+          icon={ArrowDownCircle}
+        />
+        <StatCard
+          title="Cant. salidas hoy"
+          value={stats.dailyExitsQty.toFixed(2)}
+          icon={ArrowUpCircle}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

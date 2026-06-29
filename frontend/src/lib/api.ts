@@ -77,6 +77,10 @@ export type DashboardStats = {
   totalMovements: number
   lowStock: number
   outOfStock: number
+  dailyEntries: number
+  dailyExits: number
+  dailyEntriesQty: number
+  dailyExitsQty: number
   monthlySales: number
   monthlyPurchases: number
   inventoryValue: number
@@ -94,6 +98,10 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
       totalMovements: 0,
       lowStock: 0,
       outOfStock: 0,
+      dailyEntries: 0,
+      dailyExits: 0,
+      dailyEntriesQty: 0,
+      dailyExitsQty: 0,
       monthlySales: 0,
       monthlyPurchases: 0,
       inventoryValue: 0,

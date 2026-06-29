@@ -40,6 +40,10 @@ export async function GET(req: Request) {
         totalMovements: 0,
         lowStock: 0,
         outOfStock: 0,
+        dailyEntries: 0,
+        dailyExits: 0,
+        dailyEntriesQty: 0,
+        dailyExitsQty: 0,
         monthlySales: 0,
         monthlyPurchases: 0,
         inventoryValue: 0,
@@ -67,6 +71,42 @@ export async function GET(req: Request) {
         depth: 1,
         overrideAccess: false,
         user: u,
+      }),
+    )
+
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+    const todayEnd = new Date()
+    todayEnd.setHours(23, 59, 59, 999)
+
+    queries.push(
+      payload.find({
+        collection: 'stock-movements',
+        limit: 1000,
+        depth: 0,
+        overrideAccess: false,
+        user: u,
+        where: {
+          and: [
+            { date: { greater_than_equal: todayStart.toISOString() } },
+            { date: { less_than_equal: todayEnd.toISOString() } },
+            { movementType: { in: ['in', 'adjust_in'] } },
+          ],
+        },
+      }),
+      payload.find({
+        collection: 'stock-movements',
+        limit: 1000,
+        depth: 0,
+        overrideAccess: false,
+        user: u,
+        where: {
+          and: [
+            { date: { greater_than_equal: todayStart.toISOString() } },
+            { date: { less_than_equal: todayEnd.toISOString() } },
+            { movementType: { in: ['out', 'adjust_out'] } },
+          ],
+        },
       }),
     )
 
@@ -108,7 +148,7 @@ export async function GET(req: Request) {
       queries.push(Promise.resolve({ docs: [] }))
     }
 
-    const [products, categories, suppliers, users, movements, stockLevels, purchaseOrders, salesOrders] =
+    const [products, categories, suppliers, users, movements, stockLevels, todayEntries, todayExits, purchaseOrders, salesOrders] =
       (await Promise.all(queries)) as [
         { totalDocs: number },
         { totalDocs: number },
@@ -116,6 +156,8 @@ export async function GET(req: Request) {
         { totalDocs: number },
         { totalDocs: number },
         { docs: Array<{ quantityBase?: number; value?: number; product?: unknown }> },
+        { docs: Array<{ quantityBase?: number }> },
+        { docs: Array<{ quantityBase?: number }> },
         { docs: Array<{ total?: number }> },
         { docs: Array<{ total?: number }> },
       ]
@@ -139,6 +181,11 @@ export async function GET(req: Request) {
     const monthlyPurchases = purchaseOrders.docs.reduce((sum, o) => sum + (o.total || 0), 0)
     const monthlySales = salesOrders.docs.reduce((sum, o) => sum + (o.total || 0), 0)
 
+    const dailyEntries = todayEntries.docs.length
+    const dailyExits = todayExits.docs.length
+    const dailyEntriesQty = todayEntries.docs.reduce((sum, m) => sum + (m.quantityBase || 0), 0)
+    const dailyExitsQty = todayExits.docs.reduce((sum, m) => sum + (m.quantityBase || 0), 0)
+
     return Response.json({
       role,
       totalProducts: products.totalDocs,
@@ -148,6 +195,10 @@ export async function GET(req: Request) {
       totalMovements: movements.totalDocs,
       lowStock,
       outOfStock,
+      dailyEntries,
+      dailyExits,
+      dailyEntriesQty,
+      dailyExitsQty,
       monthlySales,
       monthlyPurchases,
       inventoryValue,

@@ -34,6 +34,7 @@ const API_ROUTE_RULES: RouteRule[] = [
   { pattern: /^\/api\/dashboard\/analytics\/?$/, module: 'analytics' },
   { pattern: /^\/api\/inventory\/stock\/?$/, module: 'stock' },
   { pattern: /^\/api\/inventory\/kardex\/?$/, module: 'kardex' },
+  { pattern: /^\/api\/inventory\/movements\/?$/, module: 'movements' },
   { pattern: /^\/api\/enterprise\/?$/, module: 'dashboard' },
   { pattern: /^\/api\/users\/me\/?$/, module: null, requireAuth: true },
   { pattern: /^\/api\/users\/manage\/?$/, module: 'users' },

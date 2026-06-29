@@ -16,6 +16,7 @@ const navItems: NavItem[] = [
   { href: '/app/portal', label: 'Mi portal', module: 'portal' },
   { href: '/app/catalog', label: 'Catálogos', module: 'products' },
   { href: '/app/movements/new', label: 'Movimiento', module: 'movements' },
+  { href: '/app/movements', label: 'Historial', module: 'movements' },
   { href: '/app/stock', label: 'Stock', module: 'stock' },
   { href: '/app/kardex', label: 'Kardex FIFO', module: 'kardex' },
 ]

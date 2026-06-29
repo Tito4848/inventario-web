@@ -17,6 +17,18 @@ function num(value: unknown, fallback = 0): number {
   return Number.isFinite(n) ? n : fallback
 }
 
+function startOfDay(): Date {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function endOfDay(): Date {
+  const d = new Date()
+  d.setHours(23, 59, 59, 999)
+  return d
+}
+
 export default async function DashboardPage() {
   const headers = await getHeaders()
   const payload = await getPayload({ config: configPromise })
@@ -29,7 +41,10 @@ export default async function DashboardPage() {
     redirect(getDefaultAppRoute(u))
   }
 
-  const [products, movements, levels] = await Promise.all([
+  const todayStart = startOfDay().toISOString()
+  const todayEnd = endOfDay().toISOString()
+
+  const [products, movements, levels, todayEntries, todayExits] = await Promise.all([
     payload.find({ collection: 'products', limit: 0, user: u, overrideAccess: false }),
     payload.find({
       collection: 'stock-movements',
@@ -41,28 +56,70 @@ export default async function DashboardPage() {
     }),
     payload.find({
       collection: 'stock-levels',
-      limit: 200,
+      limit: 500,
       depth: 2,
       user: u,
       overrideAccess: false,
     }),
+    payload.find({
+      collection: 'stock-movements',
+      limit: 0,
+      user: u,
+      overrideAccess: false,
+      where: {
+        and: [
+          { date: { greater_than_equal: todayStart } },
+          { date: { less_than_equal: todayEnd } },
+          { movementType: { in: ['in', 'adjust_in'] } },
+        ],
+      },
+    }),
+    payload.find({
+      collection: 'stock-movements',
+      limit: 0,
+      user: u,
+      overrideAccess: false,
+      where: {
+        and: [
+          { date: { greater_than_equal: todayStart } },
+          { date: { less_than_equal: todayEnd } },
+          { movementType: { in: ['out', 'adjust_out'] } },
+        ],
+      },
+    }),
   ])
 
-  const lowCount = (levels.docs as unknown[]).filter((l) => {
-    const lr = asRecord(l)
-    if (!lr) return false
+  const productAgg = new Map<string, { qty: number; min: number }>()
+
+  for (const level of levels.docs as unknown[]) {
+    const lr = asRecord(level)
+    if (!lr) continue
+    const productRec = asRecord(lr.product)
+    const productId = productRec?.id ? String(productRec.id) : String(lr.product ?? '')
+    if (!productId) continue
     const qty = num(lr.quantityBase, 0)
-    const pr = asRecord(lr.product)
-    const min = pr ? num(pr.minStockBase, 0) : 0
-    return qty < min
-  }).length
+    const min = productRec ? num(productRec.minStockBase, 0) : 0
+    const existing = productAgg.get(productId)
+    if (existing) {
+      existing.qty += qty
+    } else {
+      productAgg.set(productId, { qty, min })
+    }
+  }
+
+  let lowCount = 0
+  let outCount = 0
+  for (const { qty, min } of productAgg.values()) {
+    if (qty <= 0) outCount++
+    else if (qty <= min) lowCount++
+  }
 
   return (
     <div className="grid2">
       <div className="card">
         <div className="cardHeader">
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <div style={{ fontWeight: 800, fontSize: 18 }}>Resumen</div>
+            <div style={{ fontWeight: 800, fontSize: 18 }}>Resumen inventario</div>
             <span className="pill">Hoy</span>
           </div>
           <p className="muted" style={{ marginTop: 8, marginBottom: 0 }}>
@@ -70,24 +127,61 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="cardBody">
-          <div className="row" style={{ gap: 14 }}>
-            <div className="card" style={{ flex: 1, background: 'var(--panel-2)', boxShadow: 'none' }}>
+          <div className="row" style={{ gap: 14, flexWrap: 'wrap' }}>
+            <div className="card" style={{ flex: 1, minWidth: 140, background: 'var(--panel-2)', boxShadow: 'none' }}>
               <div className="cardBody">
                 <div className="muted">Productos</div>
                 <div style={{ fontSize: 30, fontWeight: 900, marginTop: 2 }}>{products.totalDocs}</div>
               </div>
             </div>
-            <div className="card" style={{ flex: 1, background: 'var(--panel-2)', boxShadow: 'none' }}>
+            <div className="card" style={{ flex: 1, minWidth: 140, background: 'var(--panel-2)', boxShadow: 'none' }}>
               <div className="cardBody">
-                <div className="muted">Stock bajo mínimo</div>
-                <div style={{ fontSize: 30, fontWeight: 900, marginTop: 2 }}>{lowCount}</div>
+                <div className="muted">Stock bajo</div>
+                <div style={{ fontSize: 30, fontWeight: 900, marginTop: 2, color: 'var(--warn)' }}>{lowCount}</div>
+              </div>
+            </div>
+            <div className="card" style={{ flex: 1, minWidth: 140, background: 'var(--panel-2)', boxShadow: 'none' }}>
+              <div className="cardBody">
+                <div className="muted">Agotados</div>
+                <div style={{ fontSize: 30, fontWeight: 900, marginTop: 2, color: 'var(--danger)' }}>{outCount}</div>
+              </div>
+            </div>
+            <div className="card" style={{ flex: 1, minWidth: 140, background: 'var(--panel-2)', boxShadow: 'none' }}>
+              <div className="cardBody">
+                <div className="muted">Movimientos</div>
+                <div style={{ fontSize: 30, fontWeight: 900, marginTop: 2 }}>{movements.totalDocs}</div>
+              </div>
+            </div>
+            <div className="card" style={{ flex: 1, minWidth: 140, background: 'var(--panel-2)', boxShadow: 'none' }}>
+              <div className="cardBody">
+                <div className="muted">Entradas hoy</div>
+                <div style={{ fontSize: 30, fontWeight: 900, marginTop: 2 }}>{todayEntries.totalDocs}</div>
+              </div>
+            </div>
+            <div className="card" style={{ flex: 1, minWidth: 140, background: 'var(--panel-2)', boxShadow: 'none' }}>
+              <div className="cardBody">
+                <div className="muted">Salidas hoy</div>
+                <div style={{ fontSize: 30, fontWeight: 900, marginTop: 2 }}>{todayExits.totalDocs}</div>
               </div>
             </div>
           </div>
 
+          {(lowCount > 0 || outCount > 0) && (
+            <div style={{ marginTop: 14 }}>
+              <span className="badgeWarn">
+                {outCount > 0 && `${outCount} producto(s) agotado(s)`}
+                {outCount > 0 && lowCount > 0 && ' · '}
+                {lowCount > 0 && `${lowCount} producto(s) con stock bajo`}
+              </span>
+            </div>
+          )}
+
           <div style={{ marginTop: 14 }} className="row">
             <a className="btn btnPrimary" href="/app/movements/new">
               Registrar movimiento
+            </a>
+            <a className="btn" href="/app/movements">
+              Historial
             </a>
             <a className="btn" href="/app/stock">
               Ver stock
@@ -125,14 +219,14 @@ export default async function DashboardPage() {
               <tbody>
                 {(movements.docs as unknown[]).map((m) => {
                   const mr = asRecord(m) || {}
-                  const product = asRecord(mr.product)
-                  const rack = asRecord(mr.rack)
+                  const productRec = asRecord(mr.product)
+                  const rackRec = asRecord(mr.rack)
                   return (
                     <tr key={String(mr.id ?? '')}>
                       <td>{new Date(String(mr.date)).toLocaleString()}</td>
                       <td>{String(mr.movementType)}</td>
-                      <td>{String(product?.name ?? mr.product ?? '')}</td>
-                      <td>{String(rack?.name ?? mr.rack ?? '')}</td>
+                      <td>{String(productRec?.name ?? mr.product ?? '')}</td>
+                      <td>{String(rackRec?.name ?? mr.rack ?? '')}</td>
                       <td>{num(mr.quantityBase, 0).toFixed(4)}</td>
                       <td>{num(mr.totalValue, 0).toFixed(2)}</td>
                     </tr>
