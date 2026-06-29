@@ -39,6 +39,9 @@ const API_ROUTE_RULES: RouteRule[] = [
   { pattern: /^\/api\/users\/manage\/?$/, module: 'users' },
   { pattern: /^\/api\/users\/manage\/[^/]+\/?$/, module: 'users' },
   { pattern: /^\/api\/users\/manage\/[^/]+\/(activate|deactivate|reset-password)\/?$/, module: 'users' },
+  { pattern: /^\/api\/products\/manage\/?$/, module: 'products' },
+  { pattern: /^\/api\/products\/manage\/[^/]+\/?$/, module: 'products' },
+  { pattern: /^\/api\/products\/manage\/[^/]+\/(activate|deactivate)\/?$/, module: 'products' },
 ]
 
 const PUBLIC_API_PREFIXES = [

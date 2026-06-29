@@ -14,4 +14,9 @@ describe('enterprise collections', () => {
     expect(Notifications.slug).toBe('notifications')
     expect(Settings.slug).toBe('settings')
   })
+
+  it('registers brands collection', async () => {
+    const { Brands } = await import('@/collections/Brands')
+    expect(Brands.slug).toBe('brands')
+  })
 })

@@ -72,6 +72,7 @@ export interface Config {
     roles: Role;
     categories: Category;
     subcategories: Subcategory;
+    brands: Brand;
     units: Unit;
     'unit-equivalences': UnitEquivalence;
     warehouses: Warehouse;
@@ -102,6 +103,7 @@ export interface Config {
     roles: RolesSelect<false> | RolesSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     subcategories: SubcategoriesSelect<false> | SubcategoriesSelect<true>;
+    brands: BrandsSelect<false> | BrandsSelect<true>;
     units: UnitsSelect<false> | UnitsSelect<true>;
     'unit-equivalences': UnitEquivalencesSelect<false> | UnitEquivalencesSelect<true>;
     warehouses: WarehousesSelect<false> | WarehousesSelect<true>;
@@ -290,6 +292,20 @@ export interface Subcategory {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands".
+ */
+export interface Brand {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  active?: boolean | null;
+  createdBy?: (string | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "units".
  */
 export interface Unit {
@@ -375,21 +391,30 @@ export interface Product {
   barcode?: string | null;
   qrCode?: string | null;
   name: string;
-  category?: (string | null) | Category;
+  description?: string | null;
+  category: string | Category;
   subcategory?: (string | null) | Subcategory;
+  brand?: (string | null) | Brand;
   baseUnit: string | Unit;
   supplier?: (string | null) | Supplier;
   purchasePrice?: number | null;
   salePrice?: number | null;
   taxRate?: number | null;
   minStockBase?: number | null;
+  /**
+   * Opcional. Peso en kilogramos.
+   */
+  weight?: number | null;
   trackInventory?: boolean | null;
   allowNegativeStock?: boolean | null;
   maxStockBase?: number | null;
   status?: ('active' | 'inactive' | 'discontinued') | null;
   active?: boolean | null;
+  /**
+   * Compatibilidad con registros anteriores.
+   */
   image?: (string | null) | Media;
-  description?: string | null;
+  images?: (string | Media)[] | null;
   createdBy?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
@@ -702,6 +727,10 @@ export interface PayloadLockedDocument {
         value: string | Subcategory;
       } | null)
     | ({
+        relationTo: 'brands';
+        value: string | Brand;
+      } | null)
+    | ({
         relationTo: 'units';
         value: string | Unit;
       } | null)
@@ -907,6 +936,19 @@ export interface SubcategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands_select".
+ */
+export interface BrandsSelect<T extends boolean = true> {
+  code?: T;
+  name?: T;
+  description?: T;
+  active?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "units_select".
  */
 export interface UnitsSelect<T extends boolean = true> {
@@ -980,21 +1022,24 @@ export interface ProductsSelect<T extends boolean = true> {
   barcode?: T;
   qrCode?: T;
   name?: T;
+  description?: T;
   category?: T;
   subcategory?: T;
+  brand?: T;
   baseUnit?: T;
   supplier?: T;
   purchasePrice?: T;
   salePrice?: T;
   taxRate?: T;
   minStockBase?: T;
+  weight?: T;
   trackInventory?: T;
   allowNegativeStock?: T;
   maxStockBase?: T;
   status?: T;
   active?: T;
   image?: T;
-  description?: T;
+  images?: T;
   createdBy?: T;
   updatedAt?: T;
   createdAt?: T;

@@ -8,15 +8,11 @@ import {
 } from '@/access/permissions'
 import { isInvitadoOnly } from '@/access/usersAccess'
 import { resolveApiRouteAccess, resolveAppRouteAccess } from '@/access/routes'
-import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/auth/rateLimit'
+import {
+  enforceRateLimit,
+  resolveMiddlewareRateLimitAction,
+} from '@/lib/auth/rateLimit'
 import { extractRolesFromToken, getTokenFromRequest } from '@/lib/auth/jwt'
-
-const RATE_LIMITED_PATHS: Record<string, 'login' | 'forgotPassword' | 'resetPassword'> = {
-  '/api/users/login': 'login',
-  '/api/auth/login': 'login',
-  '/api/users/forgot-password': 'forgotPassword',
-  '/api/users/reset-password': 'resetPassword',
-}
 
 function applySecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-Content-Type-Options', 'nosniff')
@@ -41,11 +37,16 @@ function getRolesFromRequest(request: NextRequest): string[] | null {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  const rateLimitAction = RATE_LIMITED_PATHS[pathname]
+  const rateLimitAction = resolveMiddlewareRateLimitAction(pathname)
   if (rateLimitAction && request.method === 'POST') {
-    const limited = checkRateLimit(getClientIp(request), rateLimitAction)
-    if (!limited.allowed) {
-      return rateLimitResponse(limited.retryAfterSeconds)
+    const limited = enforceRateLimit(request, rateLimitAction)
+    if (limited) {
+      return applySecurityHeaders(
+        new NextResponse(limited.body, {
+          status: limited.status,
+          headers: limited.headers,
+        }),
+      )
     }
   }
 
@@ -119,6 +120,7 @@ export const config = {
     '/api/enterprise',
     '/api/users/me',
     '/api/users/manage/:path*',
+    '/api/products/manage/:path*',
     '/app/:path*',
     '/login',
   ],

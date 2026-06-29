@@ -4,7 +4,7 @@ import config from '@payload-config'
 import { canResetUserPassword } from '@/access/usersAccess'
 import { requireAuth } from '@/lib/auth/requireAuth'
 
-import { getTargetUser } from '../../route'
+import { getTargetUser } from '@/lib/users/targetUser'
 
 type RouteContext = { params: Promise<{ id: string }> }
 

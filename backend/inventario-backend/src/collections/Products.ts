@@ -1,18 +1,31 @@
 import type { CollectionConfig } from 'payload'
 
-import { adminOnly, inventoryReadAccess, inventoryWriteAccess } from '@/access/roles'
+import {
+  canCreateProducts,
+  canDeleteProducts,
+  canViewProductsModule,
+} from '@/access/productsAccess'
 
 export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['code', 'name', 'category', 'baseUnit', 'minStockBase', 'active', 'updatedAt'],
+    defaultColumns: [
+      'code',
+      'name',
+      'category',
+      'brand',
+      'baseUnit',
+      'minStockBase',
+      'active',
+      'updatedAt',
+    ],
   },
   access: {
-    read: inventoryReadAccess,
-    create: inventoryWriteAccess,
-    update: inventoryWriteAccess,
-    delete: adminOnly,
+    read: ({ req }) => canViewProductsModule(req.user),
+    create: ({ req }) => canCreateProducts(req.user),
+    update: ({ req }) => canCreateProducts(req.user),
+    delete: ({ req }) => canDeleteProducts(req.user),
   },
   fields: [
     {
@@ -27,6 +40,7 @@ export const Products: CollectionConfig = {
       name: 'barcode',
       type: 'text',
       label: 'Código de barras',
+      unique: true,
       index: true,
     },
     {
@@ -42,9 +56,15 @@ export const Products: CollectionConfig = {
       index: true,
     },
     {
+      name: 'description',
+      type: 'textarea',
+      label: 'Descripción',
+    },
+    {
       name: 'category',
       type: 'relationship',
       relationTo: 'categories',
+      required: true,
       label: 'Categoría',
       index: true,
     },
@@ -54,13 +74,26 @@ export const Products: CollectionConfig = {
       relationTo: 'subcategories',
       label: 'Subcategoría',
       index: true,
+      filterOptions: ({ data }) => {
+        if (!data?.category) return true
+        const categoryId =
+          typeof data.category === 'object' ? data.category.id : data.category
+        return { category: { equals: categoryId } }
+      },
+    },
+    {
+      name: 'brand',
+      type: 'relationship',
+      relationTo: 'brands',
+      label: 'Marca',
+      index: true,
     },
     {
       name: 'baseUnit',
       type: 'relationship',
       relationTo: 'units',
       required: true,
-      label: 'Unidad base',
+      label: 'Unidad de medida',
       index: true,
     },
     {
@@ -68,6 +101,7 @@ export const Products: CollectionConfig = {
       type: 'relationship',
       relationTo: 'suppliers',
       label: 'Proveedor',
+      index: true,
     },
     {
       name: 'purchasePrice',
@@ -95,6 +129,15 @@ export const Products: CollectionConfig = {
       defaultValue: 0,
       min: 0,
       label: 'Stock mínimo (en unidad base)',
+    },
+    {
+      name: 'weight',
+      type: 'number',
+      min: 0,
+      label: 'Peso (kg)',
+      admin: {
+        description: 'Opcional. Peso en kilogramos.',
+      },
     },
     {
       name: 'trackInventory',
@@ -136,12 +179,15 @@ export const Products: CollectionConfig = {
       name: 'image',
       type: 'upload',
       relationTo: 'media',
-      label: 'Imagen',
+      label: 'Imagen principal',
+      admin: { description: 'Compatibilidad con registros anteriores.' },
     },
     {
-      name: 'description',
-      type: 'textarea',
-      label: 'Descripción',
+      name: 'images',
+      type: 'upload',
+      relationTo: 'media',
+      hasMany: true,
+      label: 'Imágenes',
     },
     {
       name: 'createdBy',
@@ -154,7 +200,7 @@ export const Products: CollectionConfig = {
   ],
   hooks: {
     beforeValidate: [
-      async ({ data, req, operation }) => {
+      async ({ data, req, operation, originalDoc }) => {
         if (!data) return data
 
         if (operation === 'create' && !data.createdBy && req.user?.id) {
@@ -169,10 +215,79 @@ export const Products: CollectionConfig = {
           throw new Error('El nombre del producto es obligatorio.')
         }
 
+        if (!data.category) {
+          throw new Error('La categoría es obligatoria.')
+        }
+
+        if (!data.baseUnit) {
+          throw new Error('La unidad de medida es obligatoria.')
+        }
+
+        const purchasePrice = data.purchasePrice != null ? Number(data.purchasePrice) : 0
+        const salePrice = data.salePrice != null ? Number(data.salePrice) : 0
+        const minStock = data.minStockBase != null ? Number(data.minStockBase) : 0
+
+        if (purchasePrice < 0) {
+          throw new Error('El precio de compra debe ser mayor o igual a cero.')
+        }
+        if (salePrice < 0) {
+          throw new Error('El precio de venta debe ser mayor o igual a cero.')
+        }
+        if (minStock < 0) {
+          throw new Error('El stock mínimo debe ser mayor o igual a cero.')
+        }
+
+        if (data.weight != null && Number(data.weight) < 0) {
+          throw new Error('El peso debe ser mayor o igual a cero.')
+        }
+
+        if (data.barcode) {
+          const barcode = String(data.barcode).trim()
+          if (barcode) {
+            const existing = await req.payload.find({
+              collection: 'products',
+              where: { barcode: { equals: barcode } },
+              limit: 1,
+              depth: 0,
+              overrideAccess: true,
+            })
+            const conflict = existing.docs[0]
+            const currentId = originalDoc?.id ?? data.id
+            if (conflict && String(conflict.id) !== String(currentId)) {
+              throw new Error('El código de barras ya está registrado en otro producto.')
+            }
+          }
+        }
+
+        if (data.subcategory && data.category) {
+          const subId =
+            typeof data.subcategory === 'object' ? data.subcategory.id : data.subcategory
+          const catId = typeof data.category === 'object' ? data.category.id : data.category
+
+          const sub = await req.payload.findByID({
+            collection: 'subcategories',
+            id: String(subId),
+            depth: 0,
+            overrideAccess: true,
+          })
+
+          const subCategoryId =
+            typeof sub.category === 'object' ? sub.category?.id : sub.category
+
+          if (String(subCategoryId) !== String(catId)) {
+            throw new Error('La subcategoría no pertenece a la categoría seleccionada.')
+          }
+        }
+
+        if (data.status === 'inactive' || data.status === 'discontinued') {
+          data.active = false
+        } else if (data.status === 'active') {
+          data.active = true
+        }
+
         return data
       },
     ],
   },
   timestamps: true,
 }
-

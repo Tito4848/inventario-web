@@ -1,7 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
-import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/auth/rateLimit'
+import { enforceRateLimit } from '@/lib/auth/rateLimit'
 import { requireAuth } from '@/lib/auth/requireAuth'
 import {
   normalizeEmail,
@@ -10,9 +10,8 @@ import {
 } from '@/lib/auth/validation'
 
 export async function POST(req: Request) {
-  const ip = getClientIp(req)
-  const limited = checkRateLimit(ip, 'changePassword')
-  if (!limited.allowed) return rateLimitResponse(limited.retryAfterSeconds)
+  const limited = enforceRateLimit(req, 'changePassword')
+  if (limited) return limited
 
   const auth = await requireAuth(req)
   if (auth instanceof Response) return auth

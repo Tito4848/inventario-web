@@ -2,14 +2,13 @@ import { refresh } from '@payloadcms/next/auth'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
-import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/auth/rateLimit'
+import { enforceRateLimit } from '@/lib/auth/rateLimit'
 import { sanitizeUser } from '@/lib/auth/sanitizeUser'
 import type { User } from '@/payload-types'
 
 export async function POST(req: Request) {
-  const ip = getClientIp(req)
-  const limited = checkRateLimit(ip, 'refresh')
-  if (!limited.allowed) return rateLimitResponse(limited.retryAfterSeconds)
+  const limited = enforceRateLimit(req, 'refresh')
+  if (limited) return limited
 
   try {
     const refreshResult = await refresh({ config })

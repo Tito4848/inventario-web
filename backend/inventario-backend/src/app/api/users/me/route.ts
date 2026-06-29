@@ -13,6 +13,12 @@ import {
   canResetUserPassword,
   canViewUsersModule,
 } from '@/access/usersAccess'
+import {
+  canCreateProducts,
+  canDeleteProducts,
+  canEditProducts,
+  canViewProductsModule,
+} from '@/access/productsAccess'
 import { sanitizeUser } from '@/lib/auth/sanitizeUser'
 import type { User } from '@/payload-types'
 
@@ -40,6 +46,10 @@ export async function GET(req: Request) {
         canEditUsers: Boolean(u.roles?.includes('admin') || u.roles?.includes('supervisor')),
         canResetPasswords: canResetUserPassword(u),
         canEditOperationalUsers: u.roles?.includes('supervisor') ?? false,
+        canViewProducts: canViewProductsModule(u),
+        canCreateProducts: canCreateProducts(u),
+        canEditProducts: canEditProducts(u),
+        canDeleteProducts: canDeleteProducts(u),
       },
     })
   } catch (err: unknown) {

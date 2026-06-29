@@ -13,6 +13,7 @@ import { UnitEquivalences } from './collections/UnitEquivalences'
 import { Warehouses } from './collections/Warehouses'
 import { Sections } from './collections/Sections'
 import { Racks } from './collections/Racks'
+import { Brands } from './collections/Brands'
 import { Products } from './collections/Products'
 import { StockLevels } from './collections/StockLevels'
 import { StockLots } from './collections/StockLots'
@@ -48,6 +49,7 @@ export default buildConfig({
     Roles,
     Categories,
     Subcategories,
+    Brands,
     Units,
     UnitEquivalences,
     Warehouses,

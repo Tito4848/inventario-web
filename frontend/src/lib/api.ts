@@ -102,7 +102,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
 }
 
 export async function createProduct(data: Record<string, unknown>) {
-  return createDocument('products', data)
+  return apiFetch('/api/products/manage', { method: 'POST', body: JSON.stringify(data) })
 }
 
 export async function fetchAnalytics(): Promise<Record<string, unknown>> {

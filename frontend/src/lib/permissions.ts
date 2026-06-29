@@ -40,6 +40,10 @@ export type UserPermissions = {
   canEditUsers?: boolean
   canResetPasswords?: boolean
   canEditOperationalUsers?: boolean
+  canViewProducts?: boolean
+  canCreateProducts?: boolean
+  canEditProducts?: boolean
+  canDeleteProducts?: boolean
 }
 
 const LEGACY_ROLE_ALIASES: Partial<Record<LegacyRole, InventoryRole[]>> = {

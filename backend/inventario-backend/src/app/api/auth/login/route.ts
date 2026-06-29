@@ -6,15 +6,14 @@ import {
   TOKEN_EXPIRATION_SECONDS,
 } from '@/lib/auth/config'
 import { buildAuthCookie } from '@/lib/auth/cookies'
-import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/auth/rateLimit'
+import { enforceRateLimit } from '@/lib/auth/rateLimit'
 import { sanitizeUser } from '@/lib/auth/sanitizeUser'
 import { isValidEmail, normalizeEmail } from '@/lib/auth/validation'
 import type { User } from '@/payload-types'
 
 export async function POST(req: Request) {
-  const ip = getClientIp(req)
-  const limited = checkRateLimit(ip, 'login')
-  if (!limited.allowed) return rateLimitResponse(limited.retryAfterSeconds)
+  const limited = enforceRateLimit(req, 'login')
+  if (limited) return limited
 
   try {
     const body = (await req.json()) as {

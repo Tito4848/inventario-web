@@ -1,11 +1,14 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
-import { canToggleUserStatus, sanitizeUserForList } from '@/access/usersAccess'
+import { canToggleProductStatus } from '@/access/productsAccess'
+import {
+  aggregateStockByProduct,
+  sanitizeProductForList,
+} from '@/lib/products/sanitize'
 import { requireAuth } from '@/lib/auth/requireAuth'
-import type { User } from '@/payload-types'
 
-import { getTargetUser } from '@/lib/users/targetUser'
+import { getTargetProduct } from '@/lib/products/targetProduct'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -17,22 +20,28 @@ export async function POST(req: Request, context: RouteContext) {
   const auth = await requireAuth(req)
   if (auth instanceof Response) return auth
 
-  const { id } = await context.params
-  const target = await getTargetUser(id, auth.user)
-  if (target instanceof Response) return target
+  if (!canToggleProductStatus(auth.user)) return forbidden()
 
-  if (!canToggleUserStatus(auth.user, (target.roles as string[]) || [])) {
-    return forbidden()
-  }
+  const { id } = await context.params
+  const target = await getTargetProduct(id, auth.user)
+  if (target instanceof Response) return target
 
   const payload = await getPayload({ config })
   const updated = await payload.update({
-    collection: 'users',
+    collection: 'products',
     id,
-    data: { status: 'inactive' },
+    data: {
+      active: false,
+      status: 'inactive',
+    },
+    depth: 2,
     overrideAccess: false,
     user: auth.user,
   })
 
-  return Response.json({ doc: sanitizeUserForList(updated as User) })
+  const stockByProduct = await aggregateStockByProduct(payload, [id])
+
+  return Response.json({
+    doc: sanitizeProductForList(updated as unknown as Record<string, unknown>, stockByProduct),
+  })
 }

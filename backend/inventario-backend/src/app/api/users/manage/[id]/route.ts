@@ -4,7 +4,6 @@ import config from '@payload-config'
 import {
   canDeleteUsers,
   canEditUser,
-  canResetUserPassword,
   sanitizeUserForList,
 } from '@/access/usersAccess'
 import { requireAuth } from '@/lib/auth/requireAuth'
@@ -12,7 +11,7 @@ import { validatePassword } from '@/lib/auth/validation'
 import { isValidEmail, normalizeEmail } from '@/lib/auth/validation'
 import type { User } from '@/payload-types'
 
-import { getTargetUser } from '../route'
+import { getTargetUser } from '@/lib/users/targetUser'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -131,5 +130,3 @@ export async function DELETE(_req: Request, context: RouteContext) {
 
   return Response.json({ message: 'Usuario eliminado' })
 }
-
-export { canResetUserPassword }
