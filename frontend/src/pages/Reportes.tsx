@@ -7,7 +7,13 @@ import EmptyState from '../components/ui/EmptyState'
 import ErrorState from '../components/ui/ErrorState'
 import PageSkeleton from '../components/ui/PageSkeleton'
 import { useAuth } from '../lib/AuthProvider'
+import { resolveSalesPermissions } from '../lib/permissions'
 import { fetchPurchaseReports } from '../lib/purchasesApi'
+import {
+  downloadSaleReportCsv,
+  fetchSaleReports,
+  SALE_REPORT_TYPES,
+} from '../lib/salesApi'
 
 const legacyReports = [
   { id: 'inventory', name: 'Inventario General', formats: ['PDF', 'Excel', 'CSV'] },
@@ -26,12 +32,17 @@ const purchaseReportTypes = [
 ]
 
 export default function Reportes() {
-  const { permissions } = useAuth()
+  const { permissions, user } = useAuth()
   const [selected, setSelected] = useState('summary')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const [salesSelected, setSalesSelected] = useState('summary')
+  const [salesFrom, setSalesFrom] = useState('')
+  const [salesTo, setSalesTo] = useState('')
 
-  const canReport = Boolean(permissions?.canReportPurchases ?? permissions?.modules.includes('reports'))
+  const canReportPurchases = Boolean(permissions?.canReportPurchases ?? permissions?.modules.includes('reports'))
+  const salesPerms = resolveSalesPermissions(user, permissions)
+  const canReportSales = salesPerms.canReportSales
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['purchase-reports', selected, from, to],
@@ -41,7 +52,23 @@ export default function Reportes() {
         from: from || undefined,
         to: to || undefined,
       }),
-    enabled: canReport,
+    enabled: canReportPurchases,
+  })
+
+  const {
+    data: salesData,
+    isLoading: salesLoading,
+    error: salesError,
+    refetch: refetchSales,
+  } = useQuery({
+    queryKey: ['sales-reports', salesSelected, salesFrom, salesTo],
+    queryFn: () =>
+      fetchSaleReports({
+        type: salesSelected,
+        from: salesFrom || undefined,
+        to: salesTo || undefined,
+      }),
+    enabled: canReportSales && salesSelected !== 'csv',
   })
 
   function exportReport(name: string, format: string) {
@@ -53,6 +80,40 @@ export default function Reportes() {
     a.download = `${name.toLowerCase().replace(/\s/g, '-')}.${format.toLowerCase() === 'excel' ? 'xlsx' : format.toLowerCase()}`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  function exportSalesCsv() {
+    if (salesData?.docs?.length) {
+      const rows = salesData.docs as Record<string, unknown>[]
+      const headers = Object.keys(rows[0] ?? {})
+      const csv = [
+        headers.join(','),
+        ...rows.map((row) => headers.map((h) => JSON.stringify(row[h] ?? '')).join(',')),
+      ].join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `reporte-ventas-${salesSelected}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+      return
+    }
+    downloadSaleReportCsv({
+      type: salesSelected === 'csv' ? 'csv' : salesSelected,
+      from: salesFrom || undefined,
+      to: salesTo || undefined,
+    })
+      .then((csv) => {
+        const blob = new Blob([csv], { type: 'text/csv' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-ventas-${salesSelected}.csv`
+        a.click()
+        URL.revokeObjectURL(url)
+      })
+      .catch(() => undefined)
   }
 
   function exportPurchaseCsv() {
@@ -92,7 +153,7 @@ export default function Reportes() {
           <Button onClick={() => refetch()}>Consultar</Button>
         </div>
 
-        {!canReport ? (
+        {!canReportPurchases ? (
           <EmptyState title="Sin acceso" description="No tienes permiso para consultar reportes de compras." />
         ) : isLoading ? (
           <PageSkeleton />
@@ -113,6 +174,53 @@ export default function Reportes() {
             ) : (
               <pre className="max-h-96 overflow-auto rounded-xl bg-slate-950/5 p-4 text-xs dark:bg-slate-950/40">
                 {JSON.stringify(data.docs, null, 2)}
+              </pre>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">Ventas (backend real)</h2>
+        <div className="glass-card grid gap-3 p-4 md:grid-cols-4">
+          <select className="input-field" value={salesSelected} onChange={(e) => setSalesSelected(e.target.value)}>
+            {SALE_REPORT_TYPES.map((r) => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </select>
+          <input type="date" className="input-field" value={salesFrom} onChange={(e) => setSalesFrom(e.target.value)} />
+          <input type="date" className="input-field" value={salesTo} onChange={(e) => setSalesTo(e.target.value)} />
+          <Button onClick={() => refetchSales()}>Consultar</Button>
+        </div>
+
+        {!canReportSales ? (
+          <EmptyState title="Sin acceso" description="No tienes permiso para consultar reportes de ventas." />
+        ) : salesSelected === 'csv' ? (
+          <div className="glass-card p-5">
+            <p className="mb-4 text-sm text-slate-500">Exporta todas las ventas filtradas en formato CSV.</p>
+            <Button variant="outline" onClick={exportSalesCsv}>
+              <FileSpreadsheet className="h-4 w-4" /> Descargar CSV
+            </Button>
+          </div>
+        ) : salesLoading ? (
+          <PageSkeleton />
+        ) : salesError ? (
+          <ErrorState message="No se pudo cargar el reporte de ventas." onRetry={() => refetchSales()} />
+        ) : (
+          <div className="glass-card space-y-4 p-5">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">
+                {SALE_REPORT_TYPES.find((r) => r.id === salesSelected)?.name} ({salesData?.docs?.length ?? 0})
+              </h3>
+              <Button variant="outline" onClick={exportSalesCsv} disabled={!salesData?.docs?.length}>
+                <FileSpreadsheet className="h-4 w-4" /> Exportar CSV
+              </Button>
+            </div>
+            {!salesData?.docs?.length ? (
+              <EmptyState title="Sin resultados" description="No hay datos para los filtros seleccionados." />
+            ) : (
+              <pre className="max-h-96 overflow-auto rounded-xl bg-slate-950/5 p-4 text-xs dark:bg-slate-950/40">
+                {JSON.stringify(salesData.docs, null, 2)}
               </pre>
             )}
           </div>

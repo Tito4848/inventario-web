@@ -32,6 +32,11 @@ const CompraNueva = lazy(() => import('./pages/CompraNueva'))
 const CompraDetalle = lazy(() => import('./pages/CompraDetalle'))
 const CompraRecepcion = lazy(() => import('./pages/CompraRecepcion'))
 const Ventas = lazy(() => import('./pages/Ventas'))
+const VentaNueva = lazy(() => import('./pages/VentaNueva'))
+const VentaDetalle = lazy(() => import('./pages/VentaDetalle'))
+const VentaConfirmar = lazy(() => import('./pages/VentaConfirmar'))
+const VentaEntregar = lazy(() => import('./pages/VentaEntregar'))
+const VentaDevolver = lazy(() => import('./pages/VentaDevolver'))
 const Kardex = lazy(() => import('./pages/Kardex'))
 const Reportes = lazy(() => import('./pages/Reportes'))
 const Auditoria = lazy(() => import('./pages/Auditoria'))
@@ -90,6 +95,11 @@ function App() {
                   <Route path="compras/:id/recepcion" element={<LazyPage><CompraRecepcion /></LazyPage>} />
                   <Route path="compras/:id" element={<LazyPage><CompraDetalle /></LazyPage>} />
                   <Route path="ventas" element={<LazyPage><Ventas /></LazyPage>} />
+                  <Route path="ventas/nueva" element={<LazyPage><VentaNueva /></LazyPage>} />
+                  <Route path="ventas/:id/confirmar" element={<LazyPage><VentaConfirmar /></LazyPage>} />
+                  <Route path="ventas/:id/entregar" element={<LazyPage><VentaEntregar /></LazyPage>} />
+                  <Route path="ventas/:id/devolver" element={<LazyPage><VentaDevolver /></LazyPage>} />
+                  <Route path="ventas/:id" element={<LazyPage><VentaDetalle /></LazyPage>} />
                   <Route path="kardex" element={<LazyPage><Kardex /></LazyPage>} />
                   <Route path="reportes" element={<LazyPage><Reportes /></LazyPage>} />
                   <Route path="auditoria" element={<LazyPage><Auditoria /></LazyPage>} />

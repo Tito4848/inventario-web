@@ -50,6 +50,65 @@ export type UserPermissions = {
   canDeletePurchases?: boolean
   canReceivePurchases?: boolean
   canReportPurchases?: boolean
+  canReadSales?: boolean
+  canCreateSales?: boolean
+  canUpdateSales?: boolean
+  canDeleteSales?: boolean
+  canConfirmSales?: boolean
+  canDeliverSales?: boolean
+  canCancelSales?: boolean
+  canReturnSales?: boolean
+  canReportSales?: boolean
+}
+
+export type SalesPermissions = {
+  canReadSales: boolean
+  canCreateSales: boolean
+  canUpdateSales: boolean
+  canDeleteSales: boolean
+  canConfirmSales: boolean
+  canDeliverSales: boolean
+  canCancelSales: boolean
+  canReturnSales: boolean
+  canReportSales: boolean
+}
+
+/** Deriva permisos de ventas desde la API o roles (espejo de salesAccess.ts) */
+export function resolveSalesPermissions(
+  user: { roles?: string[] } | null | undefined,
+  permissions?: UserPermissions | null,
+): SalesPermissions {
+  const isAdminUser = userHasRole(user, 'admin')
+  const canCreate =
+    isAdminUser ||
+    userHasRole(user, 'supervisor') ||
+    userHasRole(user, 'operator') ||
+    userHasRole(user, 'seller')
+  const canWarehouseAction =
+    isAdminUser ||
+    userHasRole(user, 'supervisor') ||
+    userHasRole(user, 'operator') ||
+    userHasRole(user, 'warehouse')
+  const canReturn =
+    isAdminUser || userHasRole(user, 'supervisor') || userHasRole(user, 'warehouse')
+
+  return {
+    canReadSales: Boolean(
+      permissions?.canReadSales ?? canAccessModule(user, 'sales', permissions),
+    ),
+    canCreateSales: Boolean(permissions?.canCreateSales ?? canCreate),
+    canUpdateSales: Boolean(permissions?.canUpdateSales ?? canCreate),
+    canDeleteSales: Boolean(permissions?.canDeleteSales ?? isAdminUser),
+    canConfirmSales: Boolean(permissions?.canConfirmSales ?? canWarehouseAction),
+    canDeliverSales: Boolean(permissions?.canDeliverSales ?? canWarehouseAction),
+    canCancelSales: Boolean(permissions?.canCancelSales ?? canCreate),
+    canReturnSales: Boolean(permissions?.canReturnSales ?? canReturn),
+    canReportSales: Boolean(
+      permissions?.canReportSales ??
+        (canAccessModule(user, 'sales', permissions) ||
+          canAccessModule(user, 'reports', permissions)),
+    ),
+  }
 }
 
 const LEGACY_ROLE_ALIASES: Partial<Record<LegacyRole, InventoryRole[]>> = {
