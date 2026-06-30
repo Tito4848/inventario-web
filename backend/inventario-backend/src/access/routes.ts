@@ -48,6 +48,14 @@ const API_ROUTE_RULES: RouteRule[] = [
   { pattern: /^\/api\/purchases\/reports\/?$/, module: 'reports' },
   { pattern: /^\/api\/purchases\/[^/]+\/?$/, module: 'purchases' },
   { pattern: /^\/api\/purchases\/[^/]+\/receive\/?$/, module: 'purchases' },
+  { pattern: /^\/api\/sales\/?$/, module: 'sales' },
+  { pattern: /^\/api\/sales\/stats\/?$/, module: 'sales' },
+  { pattern: /^\/api\/sales\/reports\/?$/, module: 'reports' },
+  { pattern: /^\/api\/sales\/[^/]+\/confirm\/?$/, module: 'sales' },
+  { pattern: /^\/api\/sales\/[^/]+\/deliver\/?$/, module: 'sales' },
+  { pattern: /^\/api\/sales\/[^/]+\/cancel\/?$/, module: 'sales' },
+  { pattern: /^\/api\/sales\/[^/]+\/return\/?$/, module: 'sales' },
+  { pattern: /^\/api\/sales\/[^/]+\/?$/, module: 'sales' },
 ]
 
 const PUBLIC_API_PREFIXES = [

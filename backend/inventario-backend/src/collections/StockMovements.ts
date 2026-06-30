@@ -234,18 +234,21 @@ export const StockMovements: CollectionConfig = {
         }
 
         if (movementType === 'out' || movementType === 'adjust_out') {
-          const level = await req.payload.find({
-            collection: 'stock-levels',
-            where: { and: [{ product: { equals: productId } }, { rack: { equals: rackId } }] },
-            depth: 0,
-            limit: 1,
-            req,
-          })
-          const first = level.docs[0] as unknown
-          const lr = asRecord(first)
-          const available = level.docs.length ? Number(lr?.quantityBase ?? 0) : 0
-          if (available < qtyBase) {
-            throw new Error('Stock insuficiente para registrar la salida.')
+          const allowNegative = Boolean(pr?.allowNegativeStock)
+          if (!allowNegative) {
+            const level = await req.payload.find({
+              collection: 'stock-levels',
+              where: { and: [{ product: { equals: productId } }, { rack: { equals: rackId } }] },
+              depth: 0,
+              limit: 1,
+              req,
+            })
+            const first = level.docs[0] as unknown
+            const lr = asRecord(first)
+            const available = level.docs.length ? Number(lr?.quantityBase ?? 0) : 0
+            if (available < qtyBase) {
+              throw new Error('Stock insuficiente para registrar la salida.')
+            }
           }
         }
 

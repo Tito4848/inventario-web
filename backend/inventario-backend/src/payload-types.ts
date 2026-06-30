@@ -578,8 +578,12 @@ export interface SalesOrder {
   id: string;
   orderNumber: string;
   customer?: (string | null) | Customer;
-  status: 'draft' | 'confirmed' | 'delivered' | 'cancelled';
+  status: 'draft' | 'pending' | 'confirmed' | 'delivered' | 'cancelled' | 'returned';
   saleDate: string;
+  confirmedAt?: string | null;
+  deliveredAt?: string | null;
+  returnedAt?: string | null;
+  rack?: (string | null) | Rack;
   items?:
     | {
         product: string | Product;
@@ -587,6 +591,27 @@ export interface SalesOrder {
         unitPrice: number;
         discount?: number | null;
         total?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  deliveries?:
+    | {
+        date: string;
+        deliveredBy?: (string | null) | User;
+        notes?: string | null;
+        items?:
+          | {
+              product: string | Product;
+              quantity: number;
+              id?: string | null;
+            }[]
+          | null;
+        movementIds?:
+          | {
+              movementId: string;
+              id?: string | null;
+            }[]
+          | null;
         id?: string | null;
       }[]
     | null;
@@ -1235,6 +1260,10 @@ export interface SalesOrdersSelect<T extends boolean = true> {
   customer?: T;
   status?: T;
   saleDate?: T;
+  confirmedAt?: T;
+  deliveredAt?: T;
+  returnedAt?: T;
+  rack?: T;
   items?:
     | T
     | {
@@ -1243,6 +1272,27 @@ export interface SalesOrdersSelect<T extends boolean = true> {
         unitPrice?: T;
         discount?: T;
         total?: T;
+        id?: T;
+      };
+  deliveries?:
+    | T
+    | {
+        date?: T;
+        deliveredBy?: T;
+        notes?: T;
+        items?:
+          | T
+          | {
+              product?: T;
+              quantity?: T;
+              id?: T;
+            };
+        movementIds?:
+          | T
+          | {
+              movementId?: T;
+              id?: T;
+            };
         id?: T;
       };
   subtotal?: T;

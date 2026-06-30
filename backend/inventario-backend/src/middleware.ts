@@ -121,6 +121,8 @@ export const config = {
     '/api/users/me',
     '/api/users/manage/:path*',
     '/api/products/manage/:path*',
+    '/api/purchases/:path*',
+    '/api/sales/:path*',
     '/app/:path*',
     '/login',
   ],
